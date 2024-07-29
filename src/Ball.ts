@@ -24,8 +24,8 @@ export class Ball extends GameObject3D {
   impulse = () => {
     this.vel = {
       x: Phaser.Math.RND.realInRange(-0.02, 0.02),
-      y: Phaser.Math.RND.realInRange(0.015, 0.015),
-      z: Phaser.Math.RND.realInRange(0.008, 0.012),
+      y: Phaser.Math.RND.realInRange(0.012, 0.017),
+      z: Phaser.Math.RND.realInRange(0.007, 0.022),
     }
   }
 

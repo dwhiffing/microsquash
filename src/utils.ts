@@ -43,7 +43,7 @@ export const doUpdate = (
       handleBounce(true)
     }
 
-    if (axis !== 'y' && pos.y === 0 && vel.y === 0) {
+    if (axis !== 'y' && pos.y < 0.05 && vel.y < 0.05) {
       vel[axis] *= friction
     }
 
