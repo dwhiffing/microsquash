@@ -15,6 +15,10 @@ export class Boot extends Scene {
   preload() {
     this.load.image('ball', 'assets/ball.png')
     this.load.image('background', 'assets/bg.png')
+    this.load.spritesheet('player', 'assets/player.png', {
+      frameWidth: 16,
+      frameHeight: 16,
+    })
     this.load.bitmapFont(
       'pixel-dan',
       'assets/pixel-dan.png',
