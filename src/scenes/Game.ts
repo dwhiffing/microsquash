@@ -50,6 +50,7 @@ export class Game extends Scene {
           this.ball.bounce,
           this.ball.friction,
           GRAVITY,
+          2,
         )
 
         this.marker.pos.y = 0

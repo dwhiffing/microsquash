@@ -63,16 +63,21 @@ export function predictBounce(
   bounce: number,
   friction: number,
   gravity: number,
+  count = 1,
 ): { x: number; z: number } {
   let _pos = { ...pos }
   let _vel = { ...vel }
+  let _count = 0
 
   let hasBounced = false
   while (true) {
     doUpdate(_pos, _vel, 1, bounce, friction, gravity, () => {
       hasBounced = true
     })
-    if (hasBounced) break
+    if (hasBounced) {
+      hasBounced = false
+      if (++_count >= count) break
+    }
   }
 
   return { x: _pos.x, z: _pos.z }
