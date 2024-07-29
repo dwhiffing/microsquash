@@ -11,6 +11,7 @@ export class Game extends Scene {
   ball: Ball
   marker: Marker
   player: Player
+  score: number
   w: Phaser.Input.Keyboard.Key
   a: Phaser.Input.Keyboard.Key
   s: Phaser.Input.Keyboard.Key
@@ -25,6 +26,7 @@ export class Game extends Scene {
     this.ball = new Ball(this)
     this.marker = new Marker(this)
     this.player = new Player(this)
+    this.score = 0
 
     this.text = this.add
       .bitmapText(1, 66, 'pixel-dan', '0')
@@ -38,40 +40,43 @@ export class Game extends Scene {
       this.a = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
       this.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S)
       this.d = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
+      this.input.keyboard.on('keydown-SPACE', this.player.onAction)
     }
-
-    this.input.keyboard?.on('keydown-SPACE', () => {
-      if (this.player.hasBall) {
-        this.text.text = `0`
-        this.player.serve()
-        const { x, z } = predictBounce(
-          this.ball.pos,
-          this.ball.vel,
-          this.ball.bounce,
-          this.ball.friction,
-          GRAVITY,
-          2,
-        )
-
-        this.marker.pos.y = 0
-        this.marker.pos.x = x
-        this.marker.pos.z = z
-        this.marker.sprite.setAlpha(1)
-      } else {
-        this.player.pickup()
-      }
-    })
   }
 
-  onBounce = () => {
-    this.text.text = `${+this.text.text + 1}`
+  updateScore = (value: number) => {
+    this.ball.bounceCount = 0
+    if (value === 0) {
+      this.score = 0
+    } else {
+      this.score += 1
+    }
+    this.text.text = `${this.score}`
+  }
+
+  updatePrediction() {
+    const { x, z } = predictBounce(
+      this.ball.pos,
+      this.ball.vel,
+      this.ball.bounce,
+      this.ball.friction,
+      GRAVITY,
+      2,
+    )
+
+    this.marker.pos.y = 0
+    this.marker.pos.x = x
+    this.marker.pos.z = z
+    this.marker.sprite.setAlpha(1)
   }
 
   update(_: number, delta: number) {
-    if (this.w.isDown) this.player.move(2)
-    if (this.a.isDown) this.player.move(1)
-    if (this.s.isDown) this.player.move(0)
-    if (this.d.isDown) this.player.move(3)
+    let directions = []
+    if (this.w.isDown) directions.push(2)
+    if (this.a.isDown) directions.push(1)
+    if (this.s.isDown) directions.push(0)
+    if (this.d.isDown) directions.push(3)
+    this.player.move(directions)
 
     this.ball.update(delta)
     this.player.update(delta)

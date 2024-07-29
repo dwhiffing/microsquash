@@ -1,4 +1,4 @@
-import { MIN_VEL } from './constants'
+import { MIN_VEL, TIMESCALE } from './constants'
 export type IVec3 = { x: number; y: number; z: number }
 
 export const lerp = function (start: number, end: number, t: number) {
@@ -68,12 +68,17 @@ export function predictBounce(
   let _pos = { ...pos }
   let _vel = { ...vel }
   let _count = 0
+  let _count2 = 0
 
   let hasBounced = false
   while (true) {
-    doUpdate(_pos, _vel, 1, bounce, friction, gravity, () => {
+    doUpdate(_pos, _vel, TIMESCALE, bounce, friction, gravity, () => {
       hasBounced = true
     })
+    if (++_count2 > 1000) {
+      break
+    }
+
     if (hasBounced) {
       hasBounced = false
       if (++_count >= count) break
