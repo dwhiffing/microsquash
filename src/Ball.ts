@@ -11,12 +11,12 @@ export class Ball extends GameObject3D {
   }
 
   impulse = (
-    minX = -0.02,
-    maxX = 0.02,
+    minX = -0.0001,
+    maxX = 0.0001,
     minY = 0.012,
-    maxY = 0.017,
+    maxY = 0.012,
     minZ = 0.007,
-    maxZ = 0.022,
+    maxZ = 0.007,
   ) => {
     this.vel = {
       x: Phaser.Math.RND.realInRange(minX, maxX),

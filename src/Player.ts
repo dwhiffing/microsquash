@@ -8,8 +8,35 @@ export class Player extends GameObject3D {
   constructor(scene: Game) {
     super(scene, 'player', 'ball', { x: 0.5, y: 0, z: 0.5 }, 0, 0.93, 6)
 
-    this.sprite.setDepth(10).setTintFill(0xaa0000)
-    this.shadow.setScale(6, 1).setDepth(10)
+    this.sprite.setDepth(10)
+    this.scene.anims.create({
+      key: 'player_walk',
+      frames: this.scene.anims.generateFrameNumbers('player', {
+        start: 2,
+        end: 5,
+      }),
+      repeat: -1,
+      frameRate: 5,
+    })
+    this.scene.anims.create({
+      key: 'player_idle',
+      frames: this.scene.anims.generateFrameNumbers('player', {
+        start: 0,
+        end: 0,
+      }),
+      repeat: -1,
+      frameRate: 1,
+    })
+    this.scene.anims.create({
+      key: 'player_swing',
+      frames: this.scene.anims.generateFrameNumbers('player', {
+        start: 7,
+        end: 7,
+      }),
+      frameRate: 3,
+    })
+    this.sprite.anims.play('player_idle')
+    this.shadow.setScale(5, 1).setDepth(10)
     this.hasBall = false
   }
 
@@ -23,9 +50,20 @@ export class Player extends GameObject3D {
       this.vel.z = Math.min(max, this.vel.z + speed)
     }
     if (directions.includes(1)) {
+      this.sprite.flipX = true
       this.vel.x = Math.max(-max, this.vel.x - speed)
     } else if (directions.includes(3)) {
+      this.sprite.flipX = false
       this.vel.x = Math.min(max, this.vel.x + speed)
+    }
+    if (directions.length === 0) {
+      if (this.sprite.anims.currentAnim?.key === 'player_walk') {
+        this.sprite.anims.play('player_idle')
+      }
+    } else {
+      if (this.sprite.anims.currentAnim?.key !== 'player_walk') {
+        this.sprite.anims.play('player_walk')
+      }
     }
   }
 
@@ -41,7 +79,7 @@ export class Player extends GameObject3D {
   togglePickup(value: boolean) {
     this.hasBall = value
     this.scene.ball.togglePickup(value)
-    this.sprite.setTintFill(value ? 0xff0000 : 0xaa0000)
+    // this.sprite.setTintFill(value ? 0xff0000 : 0xaa0000)
     if (this.hasBall) {
       this.scene.ball.vel = { ...this.vel }
       this.scene.ball.pos = { ...this.pos, y: this.pos.y + 0.1 }
@@ -62,6 +100,8 @@ export class Player extends GameObject3D {
   }
 
   hitBall() {
+    this.sprite.anims.play('player_swing')
+    this.sprite.anims.chain(['player_idle'])
     this.scene.ball.impulse()
     this.scene.updatePrediction()
   }
