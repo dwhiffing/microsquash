@@ -1,16 +1,25 @@
-import { PLAYER_MAX_SPEED, PLAYER_SPEED } from './constants'
+import {
+  LEFT_BOX,
+  PLAYER_MAX_SPEED,
+  PLAYER_SPEED,
+  RIGHT_BOX,
+} from './constants'
 import { GameObject3D } from './GameObject3D'
 import { Game } from './scenes/Game'
 
 export class Player extends GameObject3D {
   hasBall: boolean
+  isResetting: boolean
   swingTimer: number
   targetPosition?: { x: number; z: number }
+  sideIndex: number
+  onReachTarget?: (value: unknown) => void
 
   constructor(scene: Game) {
     super(scene, 'player', 'ball', { x: 0.5, y: 0, z: 0.5 }, 0, 0.93, 5)
 
     this.swingTimer = 0
+    this.sideIndex = 0
     this.sprite.setDepth(10)
     this.scene.anims.create({
       key: 'player_walk',
@@ -67,6 +76,11 @@ export class Player extends GameObject3D {
       this.sprite.flipX = false
       this.vel.x = Math.min(max, this.vel.x + speed)
     }
+    if (this.hasBall && !this.isResetting) {
+      const box = this.sideIndex === 0 ? LEFT_BOX : RIGHT_BOX
+      this.pos.x = Phaser.Math.Clamp(this.pos.x, box.x[0], box.x[1])
+      this.pos.z = Phaser.Math.Clamp(this.pos.z, box.z[0], box.z[1])
+    }
     if (directions.length === 0 && !this.targetPosition) {
       if (this.sprite.anims.currentAnim?.key === 'player_walk') {
         this.sprite.anims.play('player_idle')
@@ -94,6 +108,8 @@ export class Player extends GameObject3D {
       const zdiff = this.pos.z - this.targetPosition.z
 
       if (Math.abs(xdiff) + Math.abs(zdiff) < 0.1) {
+        this.onReachTarget?.(undefined)
+        this.onReachTarget = undefined
         this.targetPosition = undefined
       }
       if (Math.abs(xdiff) > 0.05) {
@@ -123,19 +139,16 @@ export class Player extends GameObject3D {
     if (this.hasBall) {
       this.togglePickup(false)
       // TODO: should toss ball upward and lock player movement
-      this.onSwing()
-    } else if (this.canPickup()) {
-      this.togglePickup(true)
-      this.scene.updateScore(0)
+      this.onSwing(true)
     } else if (this.canSwing()) {
       this.onSwing()
     }
   }
 
-  onSwing() {
+  onSwing(isServe = false) {
     const dist = this.getBallDistance()
     this.sprite.setFlipX(dist.x > 0)
-    const isOverhead = dist.y < -0.15
+    const isOverhead = isServe || dist.y < -0.15
     this.sprite.anims.play(isOverhead ? 'player_swingover' : 'player_swing')
     this.sprite.anims.chain(['player_idle'])
 
@@ -169,8 +182,31 @@ export class Player extends GameObject3D {
     return true
   }
 
-  moveTo = (pos: { x: number; z: number }) => {
+  moveTo = async (pos: { x: number; z: number }) => {
     this.targetPosition = pos
+    const promise = new Promise((r) => {
+      this.onReachTarget = r
+    })
+    return promise
+  }
+
+  reset = async () => {
+    this.isResetting = true
+    this.sprite.alpha = 0.7
+
+    await this.moveTo(this.scene.ball.pos)
+    this.togglePickup(true)
+    this.scene.updateScore(0)
+    await this.scene.sleep(500)
+
+    const box = this.sideIndex === 0 ? LEFT_BOX : RIGHT_BOX
+    const x = (box.x[0] + box.x[1]) / 2
+    const z = (box.z[0] + box.z[1]) / 2
+    await this.moveTo({ x, z })
+    await this.scene.sleep(500)
+
+    this.sprite.alpha = 1
+    this.isResetting = false
   }
 
   getBallDistance = () => ({

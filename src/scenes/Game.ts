@@ -73,15 +73,20 @@ export class Game extends Scene {
     this.marker.sprite.setAlpha(1)
   }
 
+  sleep = (d: number) => new Promise((r) => this.time.delayedCall(d, r))
+
   update(_: number, delta: number) {
     let directions = []
-    if (!this.player.targetPosition) {
+    if (!this.player.targetPosition && !this.player.isResetting) {
       if (this.w.isDown) directions.push(2)
       if (this.a.isDown) directions.push(1)
       if (this.s.isDown) directions.push(0)
       if (this.d.isDown) directions.push(3)
     }
 
+    if (this.ball.bounceCount > 2 && !this.player.isResetting) {
+      this.sleep(500).then(this.player.reset)
+    }
     if (Phaser.Input.Keyboard.JustDown(this.space)) this.player.onAction()
     // this.player.moveTo({ x: Math.random(), z: Math.random() })
     this.player.move(directions)

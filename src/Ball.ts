@@ -8,6 +8,7 @@ export class Ball extends GameObject3D {
     super(scene, k, k, { x: 0.5, y: 0.1, z: 0.5 }, BOUNCE, FRICTION, 1)
     this.sprite.setScale(2).setDepth(9)
     this.shadow.setScale(2, 1).setDepth(9)
+    this.bounceCount = 3
   }
 
   impulse = (
@@ -35,6 +36,7 @@ export class Ball extends GameObject3D {
 
   togglePickup = (value: boolean) => {
     this.scene.ball.gravityEnabled = !value
+    this.bounceCount = 0
     this.shadow.setVisible(this.scene.ball.gravityEnabled)
   }
 }
