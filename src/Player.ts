@@ -16,7 +16,7 @@ export class Player extends GameObject3D {
         end: 5,
       }),
       repeat: -1,
-      frameRate: 5,
+      frameRate: 6,
     })
     this.scene.anims.create({
       key: 'player_idle',
@@ -32,6 +32,14 @@ export class Player extends GameObject3D {
       frames: this.scene.anims.generateFrameNumbers('player', {
         start: 7,
         end: 7,
+      }),
+      frameRate: 3,
+    })
+    this.scene.anims.create({
+      key: 'player_swingover',
+      frames: this.scene.anims.generateFrameNumbers('player', {
+        start: 6,
+        end: 6,
       }),
       frameRate: 3,
     })
@@ -89,7 +97,7 @@ export class Player extends GameObject3D {
   onAction = () => {
     if (this.hasBall) {
       this.togglePickup(false)
-      this.hitBall()
+      this.hitBall(true)
     } else if (this.canPickup()) {
       this.togglePickup(true)
       this.scene.updateScore(0)
@@ -99,8 +107,8 @@ export class Player extends GameObject3D {
     }
   }
 
-  hitBall() {
-    this.sprite.anims.play('player_swing')
+  hitBall(isOverhead = false) {
+    this.sprite.anims.play(isOverhead ? 'player_swingover' : 'player_swing')
     this.sprite.anims.chain(['player_idle'])
     this.scene.ball.impulse()
     this.scene.updatePrediction()
