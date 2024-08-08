@@ -11,51 +11,28 @@ export class Player extends GameObject3D {
   hasBall: boolean
   isResetting: boolean
   swingTimer: number
+  palette: string
   targetPosition?: { x: number; z: number }
   sideIndex: number
   onReachTarget?: (value: unknown) => void
 
-  constructor(scene: Game) {
-    super(scene, 'player', 'ball', { x: 0.5, y: 0, z: 0.5 }, 0, 0.93, 5)
+  constructor(scene: Game, palette = 'base') {
+    super(
+      scene,
+      `player-${palette}`,
+      'ball',
+      { x: 0.5, y: 0, z: 0.5 },
+      0,
+      0.93,
+      5,
+    )
+    this.palette = palette
 
     this.swingTimer = 0
     this.sideIndex = 0
     this.sprite.setDepth(10)
-    this.scene.anims.create({
-      key: 'player_walk',
-      frames: this.scene.anims.generateFrameNumbers('player', {
-        start: 2,
-        end: 5,
-      }),
-      repeat: -1,
-      frameRate: 6,
-    })
-    this.scene.anims.create({
-      key: 'player_idle',
-      frames: this.scene.anims.generateFrameNumbers('player', {
-        start: 0,
-        end: 0,
-      }),
-      repeat: -1,
-      frameRate: 1,
-    })
-    this.scene.anims.create({
-      key: 'player_swing',
-      frames: this.scene.anims.generateFrameNumbers('player', {
-        start: 7,
-        end: 7,
-      }),
-      frameRate: 3,
-    })
-    this.scene.anims.create({
-      key: 'player_swingover',
-      frames: this.scene.anims.generateFrameNumbers('player', {
-        start: 6,
-        end: 6,
-      }),
-      frameRate: 3,
-    })
-    this.sprite.anims.play('player_idle')
+
+    this.sprite.anims.play(`player-${this.palette}_idle`)
     this.shadow.setScale(5, 1).setDepth(10)
     this.hasBall = false
   }
@@ -82,12 +59,12 @@ export class Player extends GameObject3D {
       this.pos.z = Phaser.Math.Clamp(this.pos.z, box.z[0], box.z[1])
     }
     if (directions.length === 0 && !this.targetPosition) {
-      if (this.sprite.anims.currentAnim?.key === 'player_walk') {
-        this.sprite.anims.play('player_idle')
+      if (this.sprite.anims.currentAnim?.key.includes('walk')) {
+        this.sprite.anims.play(`player-${this.palette}_idle`)
       }
     } else {
-      if (this.sprite.anims.currentAnim?.key === 'player_idle') {
-        this.sprite.anims.play('player_walk')
+      if (this.sprite.anims.currentAnim?.key.includes('idle')) {
+        this.sprite.anims.play(`player-${this.palette}_walk`)
       }
     }
   }
@@ -149,8 +126,12 @@ export class Player extends GameObject3D {
     const dist = this.getBallDistance()
     this.sprite.setFlipX(dist.x > 0)
     const isOverhead = isServe || dist.y < -0.15
-    this.sprite.anims.play(isOverhead ? 'player_swingover' : 'player_swing')
-    this.sprite.anims.chain(['player_idle'])
+    this.sprite.anims.play(
+      isOverhead
+        ? `player-${this.palette}_swingover`
+        : `player-${this.palette}_swing`,
+    )
+    this.sprite.anims.chain([`player-${this.palette}_idle`])
 
     this.swingTimer = 50
     if (this.doesSwingHit()) {

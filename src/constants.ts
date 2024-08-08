@@ -18,3 +18,17 @@ export const RIGHT_BOX = {
   x: [0.8, 1],
   z: [0.23, 0.5],
 }
+
+export const PLAYER_PALETTES = {
+  base: [],
+  red: [
+    // shirt
+    { old: { r: 243, g: 206, b: 32 }, new: { r: 229, g: 48, b: 48 } },
+    // skin
+    { old: { r: 224, g: 105, b: 30 }, new: { r: 234, g: 158, b: 110 } },
+    // pants
+    { old: { r: 104, g: 66, b: 56 }, new: { r: 123, g: 118, b: 167 } },
+    // racket
+    { old: { r: 123, g: 118, b: 167 }, new: { r: 118, g: 76, b: 133 } },
+  ],
+}

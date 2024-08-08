@@ -2,7 +2,7 @@ import { Scene } from 'phaser'
 import { Player } from '../Player'
 import { Ball } from '../Ball'
 import { predictBounce } from '../utils'
-import { GRAVITY } from '../constants'
+import { GRAVITY, PLAYER_PALETTES } from '../constants'
 import { Marker } from '../Marker'
 
 export class Game extends Scene {
@@ -23,6 +23,8 @@ export class Game extends Scene {
   }
 
   create() {
+    this.createSprites()
+
     this.background = this.add.image(0, 0, 'background').setOrigin(0)
     this.ball = new Ball(this)
     this.marker = new Marker(this)
@@ -94,5 +96,79 @@ export class Game extends Scene {
     this.ball.update(delta)
     this.player.update(delta)
     this.marker.update(delta)
+  }
+
+  createSprites = () => {
+    const texture = this.textures.get('player-base')
+    const { width: frameWidth, height: frameHeight } =
+      texture.getFramesFromTextureSource(0)[0]
+    Object.entries(PLAYER_PALETTES).forEach(([name, colors]) => {
+      const atlasKey = `player-${name}`
+
+      if (name !== 'base') {
+        const sheet = texture.getSourceImage() as HTMLCanvasElement
+        const canvasTexture = this.textures.createCanvas(
+          `${atlasKey}-temp`,
+          sheet.width,
+          sheet.height,
+        )!
+        const context = (
+          canvasTexture.getSourceImage() as HTMLCanvasElement
+        ).getContext('2d')!
+        context.drawImage(sheet, 0, 0)
+
+        const imageData = context.getImageData(0, 0, sheet.width, sheet.height)
+        for (var p = 0; p < imageData.data.length / 4; p++) {
+          var index = 4 * p
+
+          var r = imageData.data[index]
+          var g = imageData.data[++index]
+          var b = imageData.data[++index]
+          var alpha = imageData.data[++index]
+
+          if (alpha !== 255) continue
+
+          for (let color of colors) {
+            if (r === color.old.r && g === color.old.g && b === color.old.b) {
+              imageData.data[--index] = color.new.b
+              imageData.data[--index] = color.new.g
+              imageData.data[--index] = color.new.r
+            }
+          }
+        }
+
+        context.putImageData(imageData, 0, 0)
+
+        this.textures.addSpriteSheet(
+          atlasKey,
+          canvasTexture.getSourceImage() as HTMLImageElement,
+          { frameWidth, frameHeight },
+        )
+        this.textures.get(`${atlasKey}-temp`).destroy()
+      }
+
+      this.anims.create({
+        key: `${atlasKey}_walk`,
+        frames: this.anims.generateFrameNumbers(atlasKey, { start: 2, end: 5 }),
+        repeat: -1,
+        frameRate: 6,
+      })
+      this.anims.create({
+        key: `${atlasKey}_idle`,
+        frames: this.anims.generateFrameNumbers(atlasKey, { start: 0, end: 0 }),
+        repeat: -1,
+        frameRate: 1,
+      })
+      this.anims.create({
+        key: `${atlasKey}_swing`,
+        frames: this.anims.generateFrameNumbers(atlasKey, { start: 7, end: 7 }),
+        frameRate: 3,
+      })
+      this.anims.create({
+        key: `${atlasKey}_swingover`,
+        frames: this.anims.generateFrameNumbers(atlasKey, { start: 6, end: 6 }),
+        frameRate: 3,
+      })
+    })
   }
 }
