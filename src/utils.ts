@@ -53,7 +53,7 @@ export const doUpdate = (
   }
 
   if (pos.y > 0 && gravity) {
-    vel.y -= gravity
+    vel.y -= gravity * ratio
   }
 }
 
