@@ -11,8 +11,8 @@ export class Ball extends GameObject3D {
   }
 
   impulse = (
-    minX = -0.0001,
-    maxX = 0.0001,
+    minX = -0.002,
+    maxX = 0.002,
     minY = 0.012,
     maxY = 0.012,
     minZ = 0.007,

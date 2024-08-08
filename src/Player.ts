@@ -4,10 +4,12 @@ import { Game } from './scenes/Game'
 
 export class Player extends GameObject3D {
   hasBall: boolean
+  swingTimer: number
 
   constructor(scene: Game) {
     super(scene, 'player', 'ball', { x: 0.5, y: 0, z: 0.5 }, 0, 0.93, 5)
 
+    this.swingTimer = 0
     this.sprite.setDepth(10)
     this.scene.anims.create({
       key: 'player_walk',
@@ -69,7 +71,7 @@ export class Player extends GameObject3D {
         this.sprite.anims.play('player_idle')
       }
     } else {
-      if (this.sprite.anims.currentAnim?.key !== 'player_walk') {
+      if (this.sprite.anims.currentAnim?.key === 'player_idle') {
         this.sprite.anims.play('player_walk')
       }
     }
@@ -79,6 +81,10 @@ export class Player extends GameObject3D {
     if (this.hasBall) {
       this.scene.ball.pos = { ...this.pos, y: this.pos.y + 0.1 }
       this.scene.ball.vel = { ...this.vel, y: this.vel.y }
+    }
+
+    if (this.swingTimer > 0) {
+      this.swingTimer--
     }
 
     super.update(delta)
@@ -97,38 +103,56 @@ export class Player extends GameObject3D {
   onAction = () => {
     if (this.hasBall) {
       this.togglePickup(false)
-      this.hitBall(true)
+      // TODO: should toss ball upward and lock player movement
+      this.onSwing()
     } else if (this.canPickup()) {
       this.togglePickup(true)
       this.scene.updateScore(0)
     } else if (this.canSwing()) {
-      this.hitBall()
-      this.scene.updateScore(1)
+      this.onSwing()
     }
   }
 
-  hitBall(isOverhead = false) {
+  onSwing() {
+    const dist = this.getBallDistance()
+    this.sprite.setFlipX(dist.x > 0)
+    const isOverhead = dist.y < -0.15
     this.sprite.anims.play(isOverhead ? 'player_swingover' : 'player_swing')
     this.sprite.anims.chain(['player_idle'])
-    this.scene.ball.impulse()
-    this.scene.updatePrediction()
+
+    this.swingTimer = 50
+    if (this.doesSwingHit()) {
+      this.scene.updateScore(1)
+      this.scene.ball.impulse()
+      this.scene.updatePrediction()
+    }
   }
 
   canSwing() {
-    if (this.getBallDistance() > 0.2) return false
+    if (this.sprite.anims.currentAnim?.key.includes('swing')) return false
+    if (this.swingTimer > 0) return false
+    return true
+  }
+
+  doesSwingHit() {
+    const dist = this.getBallDistance()
+    if (Math.abs(dist.x) + Math.abs(dist.z) > 0.2) return false
     if (this.scene.ball.pos.y > 0.25) return false
     if (this.scene.ball.bounceCount >= 2) return false
     return true
   }
 
   canPickup = () => {
-    if (this.getBallDistance() > 0.15) return false
+    const dist = this.getBallDistance()
+    if (Math.abs(dist.x) + Math.abs(dist.z) > 0.15) return false
     if (this.hasBall) return false
     if (this.scene.ball.isDead) return false
     return true
   }
 
-  getBallDistance = () =>
-    Math.abs(this.pos.x - this.scene.ball.pos.x) +
-    Math.abs(this.pos.z - this.scene.ball.pos.z)
+  getBallDistance = () => ({
+    x: this.pos.x - this.scene.ball.pos.x,
+    z: this.pos.z - this.scene.ball.pos.z,
+    y: this.pos.y - this.scene.ball.pos.y,
+  })
 }

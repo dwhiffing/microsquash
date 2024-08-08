@@ -16,6 +16,7 @@ export class Game extends Scene {
   a: Phaser.Input.Keyboard.Key
   s: Phaser.Input.Keyboard.Key
   d: Phaser.Input.Keyboard.Key
+  space: Phaser.Input.Keyboard.Key
 
   constructor() {
     super('Game')
@@ -40,7 +41,9 @@ export class Game extends Scene {
       this.a = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
       this.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S)
       this.d = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
-      this.input.keyboard.on('keydown-SPACE', this.player.onAction)
+      this.space = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.SPACE,
+      )
     }
   }
 
@@ -76,6 +79,7 @@ export class Game extends Scene {
     if (this.a.isDown) directions.push(1)
     if (this.s.isDown) directions.push(0)
     if (this.d.isDown) directions.push(3)
+    if (Phaser.Input.Keyboard.JustDown(this.space)) this.player.onAction()
     this.player.move(directions)
 
     this.ball.update(delta)
