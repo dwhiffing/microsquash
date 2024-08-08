@@ -6,7 +6,7 @@ export class Player extends GameObject3D {
   hasBall: boolean
 
   constructor(scene: Game) {
-    super(scene, 'player', 'ball', { x: 0.5, y: 0, z: 0.5 }, 0, 0.93, 6)
+    super(scene, 'player', 'ball', { x: 0.5, y: 0, z: 0.5 }, 0, 0.93, 5)
 
     this.sprite.setDepth(10)
     this.scene.anims.create({

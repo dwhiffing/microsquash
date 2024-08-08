@@ -47,8 +47,8 @@ export class GameObject3D {
     const l2 = lerp(S, S - W - 1, z)
     const _y = _z - y * l2
 
-    this.sprite.setPosition(_x, Math.round(_y))
-    this.shadow.setPosition(_x, Math.round(_z))
+    this.sprite.setPosition(Math.round(_x), Math.round(_y))
+    this.shadow.setPosition(Math.round(_x), Math.round(_z))
   }
 
   update(delta: number) {
