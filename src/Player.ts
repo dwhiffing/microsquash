@@ -5,6 +5,7 @@ import { Game } from './scenes/Game'
 export class Player extends GameObject3D {
   hasBall: boolean
   swingTimer: number
+  targetPosition?: { x: number; z: number }
 
   constructor(scene: Game) {
     super(scene, 'player', 'ball', { x: 0.5, y: 0, z: 0.5 }, 0, 0.93, 5)
@@ -66,7 +67,7 @@ export class Player extends GameObject3D {
       this.sprite.flipX = false
       this.vel.x = Math.min(max, this.vel.x + speed)
     }
-    if (directions.length === 0) {
+    if (directions.length === 0 && !this.targetPosition) {
       if (this.sprite.anims.currentAnim?.key === 'player_walk') {
         this.sprite.anims.play('player_idle')
       }
@@ -85,6 +86,24 @@ export class Player extends GameObject3D {
 
     if (this.swingTimer > 0) {
       this.swingTimer--
+    }
+
+    if (this.targetPosition) {
+      let directions: number[] = []
+      const xdiff = this.pos.x - this.targetPosition.x
+      const zdiff = this.pos.z - this.targetPosition.z
+
+      if (Math.abs(xdiff) + Math.abs(zdiff) < 0.1) {
+        this.targetPosition = undefined
+      }
+      if (Math.abs(xdiff) > 0.05) {
+        directions.push(xdiff > 0 ? 1 : 3)
+      }
+      if (Math.abs(zdiff) > 0.05) {
+        directions.push(zdiff > 0 ? 0 : 2)
+      }
+
+      this.move(directions)
     }
 
     super.update(delta)
@@ -148,6 +167,10 @@ export class Player extends GameObject3D {
     if (this.hasBall) return false
     if (this.scene.ball.isDead) return false
     return true
+  }
+
+  moveTo = (pos: { x: number; z: number }) => {
+    this.targetPosition = pos
   }
 
   getBallDistance = () => ({

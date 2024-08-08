@@ -75,11 +75,15 @@ export class Game extends Scene {
 
   update(_: number, delta: number) {
     let directions = []
-    if (this.w.isDown) directions.push(2)
-    if (this.a.isDown) directions.push(1)
-    if (this.s.isDown) directions.push(0)
-    if (this.d.isDown) directions.push(3)
+    if (!this.player.targetPosition) {
+      if (this.w.isDown) directions.push(2)
+      if (this.a.isDown) directions.push(1)
+      if (this.s.isDown) directions.push(0)
+      if (this.d.isDown) directions.push(3)
+    }
+
     if (Phaser.Input.Keyboard.JustDown(this.space)) this.player.onAction()
+    // this.player.moveTo({ x: Math.random(), z: Math.random() })
     this.player.move(directions)
 
     this.ball.update(delta)
