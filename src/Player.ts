@@ -9,14 +9,15 @@ import { Game } from './scenes/Game'
 
 export class Player extends GameObject3D {
   hasBall: boolean
-  isResetting: boolean
+  autoPlay: boolean
+  isGettingBall: boolean
   swingTimer: number
   palette: string
   targetPosition?: { x: number; z: number }
   sideIndex: number
   onReachTarget?: (value: unknown) => void
 
-  constructor(scene: Game, palette = 'base') {
+  constructor(scene: Game, palette = 'red', autoPlay = true) {
     super(
       scene,
       `player-${palette}`,
@@ -27,6 +28,11 @@ export class Player extends GameObject3D {
       5,
     )
     this.palette = palette
+    this.autoPlay = autoPlay
+
+    if (autoPlay) {
+      this.sprite.setAlpha(0.7)
+    }
 
     this.swingTimer = 0
     this.sideIndex = 0
@@ -37,39 +43,23 @@ export class Player extends GameObject3D {
     this.hasBall = false
   }
 
-  move(directions: number[]) {
-    const max = PLAYER_MAX_SPEED
-    const speed = PLAYER_SPEED / Math.sqrt(directions.length)
-
-    if (directions.includes(0)) {
-      this.vel.z = Math.max(-max, this.vel.z - speed)
-    } else if (directions.includes(2)) {
-      this.vel.z = Math.min(max, this.vel.z + speed)
-    }
-    if (directions.includes(1)) {
-      this.sprite.flipX = true
-      this.vel.x = Math.max(-max, this.vel.x - speed)
-    } else if (directions.includes(3)) {
-      this.sprite.flipX = false
-      this.vel.x = Math.min(max, this.vel.x + speed)
-    }
-    if (this.hasBall && !this.isResetting) {
-      const box = this.sideIndex === 0 ? LEFT_BOX : RIGHT_BOX
-      this.pos.x = Phaser.Math.Clamp(this.pos.x, box.x[0], box.x[1])
-      this.pos.z = Phaser.Math.Clamp(this.pos.z, box.z[0], box.z[1])
-    }
-    if (directions.length === 0 && !this.targetPosition) {
-      if (this.sprite.anims.currentAnim?.key.includes('walk')) {
-        this.sprite.anims.play(`player-${this.palette}_idle`)
-      }
-    } else {
-      if (this.sprite.anims.currentAnim?.key.includes('idle')) {
-        this.sprite.anims.play(`player-${this.palette}_walk`)
-      }
-    }
-  }
-
   update(delta: number) {
+    if (this.scene.ball.bounceCount > 2 && !this.isGettingBall) {
+      this.scene.sleep(500).then(this.onGetBall)
+    }
+
+    if (this.autoPlay) {
+      if (this.hasBall) {
+        if (!this.isGettingBall) {
+          this.onAction()
+          this.onMoveTo(this.scene.marker.pos)
+        }
+      } else if (this.canSwing() && this.doesSwingHit()) {
+        this.onSwing()
+        this.onMoveTo(this.scene.marker.pos)
+      }
+    }
+
     if (this.hasBall) {
       this.scene.ball.pos = { ...this.pos, y: this.pos.y + 0.1 }
       this.scene.ball.vel = { ...this.vel, y: this.vel.y }
@@ -96,10 +86,50 @@ export class Player extends GameObject3D {
         directions.push(zdiff > 0 ? 0 : 2)
       }
 
-      this.move(directions)
+      this.onMove(directions)
     }
 
     super.update(delta)
+  }
+
+  handleInput(directions: number[]) {
+    if (this.targetPosition || this.isGettingBall) return
+    this.onMove(directions)
+  }
+
+  onMove(directions: number[]) {
+    const max = PLAYER_MAX_SPEED
+    const speed = PLAYER_SPEED / Math.sqrt(directions.length)
+
+    if (directions.includes(0)) {
+      this.vel.z = Math.max(-max, this.vel.z - speed)
+    } else if (directions.includes(2)) {
+      this.vel.z = Math.min(max, this.vel.z + speed)
+    }
+    if (directions.includes(1)) {
+      this.sprite.flipX = true
+      this.vel.x = Math.max(-max, this.vel.x - speed)
+    } else if (directions.includes(3)) {
+      this.sprite.flipX = false
+      this.vel.x = Math.min(max, this.vel.x + speed)
+    }
+
+    // stay inside serving box
+    if (this.hasBall && !this.isGettingBall) {
+      const box = this.sideIndex === 0 ? LEFT_BOX : RIGHT_BOX
+      this.pos.x = Phaser.Math.Clamp(this.pos.x, box.x[0], box.x[1])
+      this.pos.z = Phaser.Math.Clamp(this.pos.z, box.z[0], box.z[1])
+    }
+
+    if (directions.length === 0 && !this.targetPosition) {
+      if (this.sprite.anims.currentAnim?.key.includes('walk')) {
+        this.sprite.anims.play(`player-${this.palette}_idle`)
+      }
+    } else {
+      if (this.sprite.anims.currentAnim?.key.includes('idle')) {
+        this.sprite.anims.play(`player-${this.palette}_walk`)
+      }
+    }
   }
 
   togglePickup(value: boolean) {
@@ -141,6 +171,31 @@ export class Player extends GameObject3D {
     }
   }
 
+  onMoveTo = async (pos: { x: number; z: number }) => {
+    this.targetPosition = pos
+    const promise = new Promise((r) => {
+      this.onReachTarget = r
+    })
+    return promise
+  }
+
+  onGetBall = async () => {
+    this.isGettingBall = true
+
+    await this.onMoveTo(this.scene.ball.pos)
+    this.togglePickup(true)
+    this.scene.updateScore(0)
+    await this.scene.sleep(500)
+
+    const box = this.sideIndex === 0 ? LEFT_BOX : RIGHT_BOX
+    const x = (box.x[0] + box.x[1]) / 2
+    const z = (box.z[0] + box.z[1]) / 2
+    await this.onMoveTo({ x, z })
+    await this.scene.sleep(500)
+
+    this.isGettingBall = false
+  }
+
   canSwing() {
     if (this.sprite.anims.currentAnim?.key.includes('swing')) return false
     if (this.swingTimer > 0) return false
@@ -161,33 +216,6 @@ export class Player extends GameObject3D {
     if (this.hasBall) return false
     if (this.scene.ball.isDead) return false
     return true
-  }
-
-  moveTo = async (pos: { x: number; z: number }) => {
-    this.targetPosition = pos
-    const promise = new Promise((r) => {
-      this.onReachTarget = r
-    })
-    return promise
-  }
-
-  reset = async () => {
-    this.isResetting = true
-    this.sprite.alpha = 0.7
-
-    await this.moveTo(this.scene.ball.pos)
-    this.togglePickup(true)
-    this.scene.updateScore(0)
-    await this.scene.sleep(500)
-
-    const box = this.sideIndex === 0 ? LEFT_BOX : RIGHT_BOX
-    const x = (box.x[0] + box.x[1]) / 2
-    const z = (box.z[0] + box.z[1]) / 2
-    await this.moveTo({ x, z })
-    await this.scene.sleep(500)
-
-    this.sprite.alpha = 1
-    this.isResetting = false
   }
 
   getBallDistance = () => ({
