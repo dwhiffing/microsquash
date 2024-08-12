@@ -7,12 +7,14 @@ import {
 import { GameObject3D } from './GameObject3D'
 import { Game } from './scenes/Game'
 
+const MIN_CHARGE = 70
+const MAX_CHARGE = 150
 export class Player extends GameObject3D {
   hasBall: boolean
   autoPlay: boolean
   isGettingBall: boolean
   isCharging: boolean
-  swingTimer: number
+  isSwingReady: boolean
   chargeTimer: number
   palette: string
   targetPosition?: { x: number; z: number }
@@ -36,7 +38,7 @@ export class Player extends GameObject3D {
       this.sprite.setAlpha(0.7)
     }
 
-    this.swingTimer = 0
+    this.isSwingReady = true
     this.chargeTimer = 0
     this.sideIndex = sideIndex
     this.sprite.setDepth(10)
@@ -57,8 +59,8 @@ export class Player extends GameObject3D {
       this.scene.sleep(500).then(this.onGetBall)
     }
 
-    if (this.isCharging && this.chargeTimer < 100) {
-      this.chargeTimer++
+    if (this.isCharging && this.chargeTimer < MAX_CHARGE) {
+      this.chargeTimer += delta / 7
     }
 
     if (this.autoPlay) {
@@ -78,7 +80,7 @@ export class Player extends GameObject3D {
         if (!this.hasBall && this.canSwing() && this.doesSwingHit()) {
           this.onMoveTo({ x: 0.5, z: 0.5 })
           this.startSwing()
-          this.chargeTimer = Phaser.Math.RND.between(30, 80)
+          this.chargeTimer = Phaser.Math.RND.between(MIN_CHARGE, MAX_CHARGE)
           this.onSwing()
         }
       }
@@ -87,10 +89,6 @@ export class Player extends GameObject3D {
     if (this.hasBall) {
       this.scene.ball.pos = { ...this.pos, y: this.pos.y + 0.1 }
       this.scene.ball.vel = { ...this.vel, y: this.vel.y }
-    }
-
-    if (this.swingTimer > 0) {
-      this.swingTimer--
     }
 
     if (this.targetPosition) {
@@ -194,7 +192,7 @@ export class Player extends GameObject3D {
   startSwing() {
     if (this.isCharging) return
     this.sprite.anims.play(`player-${this.palette}_idle`)
-    this.chargeTimer = 20
+    this.chargeTimer = MIN_CHARGE
     this.isCharging = true
   }
 
@@ -210,19 +208,37 @@ export class Player extends GameObject3D {
     )
     this.sprite.anims.chain([`player-${this.palette}_idle`])
 
-    this.swingTimer = 50
+    this.isSwingReady = false
+    this.scene.time.delayedCall(350, () => {
+      this.isSwingReady = true
+    })
     if (isServe || this.doesSwingHit()) {
       let currentSideIndex = this.scene.playerTurnIndex
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
-      this.scene.ball.impulse(
-        isServe
-          ? this.sideIndex === 0
-            ? 0.01
-            : -0.01
-          : Phaser.Math.RND.realInRange(-0.005, 0.005),
-        0.012,
-        0.015 * (isServe ? 1 : this.chargeTimer / 70),
-      )
+
+      const chargeRatio = this.chargeTimer / MAX_CHARGE
+      const { w, a, s, d } = this.scene
+      let yBias = 0.004 * chargeRatio
+      let xBias = 0.01 * chargeRatio
+
+      const inputYBias = w.isDown ? -yBias : s.isDown ? yBias : 0
+      const inputXBias = d.isDown ? xBias : a.isDown ? -xBias : 0
+
+      let x = Phaser.Math.RND.realInRange(-0.003, 0.003)
+      let y = 0.012
+      let z = 0.015
+
+      if (isServe) {
+        let serveBias = 0.01
+        if (this.sideIndex === 1) serveBias *= -1
+        x += serveBias
+      } else {
+        x += inputXBias
+        y += inputYBias
+        z *= chargeRatio
+      }
+
+      this.scene.ball.impulse(x, y, z)
       this.scene.ball.isServe = isServe
       this.scene.updatePrediction()
 
@@ -259,7 +275,7 @@ export class Player extends GameObject3D {
 
   canSwing() {
     if (this.sprite.anims.currentAnim?.key.includes('swing')) return false
-    if (this.swingTimer > 0) return false
+    if (!this.isSwingReady) return false
     return true
   }
 
