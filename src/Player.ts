@@ -212,6 +212,7 @@ export class Player extends GameObject3D {
     this.scene.time.delayedCall(350, () => {
       this.isSwingReady = true
     })
+
     if (isServe || this.doesSwingHit()) {
       let currentSideIndex = this.scene.playerTurnIndex
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
@@ -221,17 +222,20 @@ export class Player extends GameObject3D {
       let yBias = 0.004 * chargeRatio
       let xBias = 0.01 * chargeRatio
 
-      const inputYBias = w.isDown ? -yBias : s.isDown ? yBias : 0
-      const inputXBias = d.isDown ? xBias : a.isDown ? -xBias : 0
+      const checkKey = getCheckKey(this.scene)
 
-      let x = Phaser.Math.RND.realInRange(-0.003, 0.003)
+      const inputYBias = checkKey(w) ? -yBias : checkKey(s) ? yBias : 0
+      const inputXBias = checkKey(d) ? xBias : checkKey(a) ? -xBias : 0
+
+      let x = Phaser.Math.RND.realInRange(0.002, 0.005)
+      if (this.sideIndex === 1) x *= -1
       let y = 0.012
       let z = 0.015
 
       if (isServe) {
-        let serveBias = 0.01
+        let serveBias = 0.006
         if (this.sideIndex === 1) serveBias *= -1
-        x += serveBias
+        x = serveBias
       } else {
         x += inputXBias
         y += inputYBias
@@ -307,3 +311,6 @@ export class Player extends GameObject3D {
     y: this.pos.y - this.scene.ball.pos.y,
   })
 }
+
+const getCheckKey = (scene: Game) => (key: Phaser.Input.Keyboard.Key) =>
+  key.isDown || Math.abs(key.timeUp - scene.time.now) < 500
