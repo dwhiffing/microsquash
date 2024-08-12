@@ -64,16 +64,21 @@ export class Player extends GameObject3D {
     if (this.autoPlay) {
       if (this.hasBall && !this.isGettingBall) {
         this.onAction()
-        this.onMoveTo(this.scene.marker.pos)
+        this.scene.sleep(500).then(() => {
+          this.onMoveTo({ x: 0.5, z: 0.5 })
+        })
       }
       if (this.isOurTurn) {
-        if (!this.targetPosition) {
-          this.onMoveTo(this.scene.marker.pos) // TODO: if we're already on the marker, no need to move
+        if (!this.targetPosition && this.scene.ball.inPlay) {
+          const diff =
+            Math.abs(this.pos.z - this.scene.marker.pos.z) +
+            Math.abs(this.pos.x - this.scene.marker.pos.x)
+          if (diff > 0.1) this.onMoveTo(this.scene.marker.pos)
         }
         if (!this.hasBall && this.canSwing() && this.doesSwingHit()) {
           this.onMoveTo({ x: 0.5, z: 0.5 })
           this.startSwing()
-          this.chargeTimer = Phaser.Math.RND.between(20, 80)
+          this.chargeTimer = Phaser.Math.RND.between(30, 80)
           this.onSwing()
         }
       }
