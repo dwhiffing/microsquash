@@ -205,7 +205,7 @@ export class Player extends GameObject3D {
     this.sprite.anims.chain([`player-${this.palette}_idle`])
 
     this.swingTimer = 50
-    if (this.doesSwingHit()) {
+    if (isServe || this.doesSwingHit()) {
       this.scene.ball.bounceCount = 0
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
       this.scene.ball.impulse(
@@ -253,7 +253,7 @@ export class Player extends GameObject3D {
     if (Math.abs(dist.x) + Math.abs(dist.z) > 0.2) return false // too far
     if (this.scene.ball.pos.y > 0.25) return false // too high
     if (this.scene.ball.bounceCount >= 2) return false // ball is out
-    // if (this.scene.ball.vel.z > 0) return false // moving away from player
+    if (this.autoPlay && this.scene.ball.vel.z > 0) return false // moving away from player
 
     return true
   }
