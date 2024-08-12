@@ -6,6 +6,8 @@ export class Ball extends GameObject3D {
   hasFaulted = false
   hitBackWall = false
   inPlay = false
+  isServe = false
+
   constructor(scene: Game) {
     const k = 'ball'
     super(scene, k, k, { x: 0.5, y: 0.1, z: 0.5 }, BOUNCE, FRICTION, 1)
@@ -44,11 +46,11 @@ export class Ball extends GameObject3D {
   }
 
   onBounce(axis: string, isGround: boolean) {
-    // this.pos.y >= 0.42 for serve
     if (!isGround && this.pos.z === 1) {
       this.hitBackWall = true
       // hit outside red lines
-      this.hasFaulted = this.pos.y <= 0.15 && this.pos.y > 0.92
+      const yThres = this.isServe ? 0.42 : 0.15
+      this.hasFaulted = this.pos.y <= yThres || this.pos.y > 0.92
     }
 
     // hit ceiling
@@ -56,15 +58,20 @@ export class Ball extends GameObject3D {
       this.hasFaulted = true
     }
 
-    if (this.hasFaulted) {
-      this.scene.onBallOut()
-    }
-
     if (axis === 'y' && isGround) {
       this.bounceCount++
+      if (this.isServe && !this.hasFaulted) {
+        const isXValid =
+          this.scene.playerTurnIndex === 0 ? this.pos.x < 0.5 : this.pos.x > 0.5
+        this.hasFaulted = this.pos.z > 0.55 || !isXValid
+      }
       if (this.bounceCount === 2) {
         this.scene.onBallOut()
       }
+    }
+
+    if (this.hasFaulted) {
+      this.scene.onBallOut()
     }
   }
 }

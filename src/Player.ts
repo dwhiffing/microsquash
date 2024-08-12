@@ -223,6 +223,7 @@ export class Player extends GameObject3D {
         0.012,
         0.015 * (isServe ? 1 : this.chargeTimer / 70),
       )
+      this.scene.ball.isServe = isServe
       this.scene.updatePrediction()
 
       if (currentSideIndex !== this.sideIndex) {
