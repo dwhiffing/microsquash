@@ -66,10 +66,12 @@ export class Game extends Scene {
   }
 
   onBallOut() {
-    const homeChange = this.playerTurnIndex === 0 ? 0 : 1
-    const awayChange = this.playerTurnIndex === 0 ? 1 : 0
+    let isHomePoint = this.playerTurnIndex === 1
+    if (!this.ball.hitBackWall) isHomePoint = !isHomePoint
+    const homeChange = isHomePoint ? 1 : 0
+    const awayChange = isHomePoint ? 0 : 1
     this.updateScore(homeChange, awayChange)
-    this.playerTurnIndex = homeChange ? 0 : 1
+    this.playerTurnIndex = isHomePoint ? 0 : 1
   }
 
   updateScore(homeChange = 0, awayChange = 0) {

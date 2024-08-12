@@ -12,7 +12,7 @@ export const doUpdate = (
   bounce: number,
   friction: number,
   gravity: number,
-  onBounce: () => void,
+  onBounce: (s: string, isGround: boolean) => void,
 ) => {
   pos.x += vel.x * ratio
   pos.y += vel.y * ratio
@@ -23,9 +23,8 @@ export const doUpdate = (
     const bounceValue = axis === 'y' ? -bounce : -bounce
 
     const handleBounce = (isGround = false) => {
-      if (axis === 'y' && isGround) {
-        onBounce()
-      }
+      onBounce(axis, isGround)
+
       if (Math.abs(vel[axis]) < MIN_VEL) {
         vel[axis] *= 0
       } else {
