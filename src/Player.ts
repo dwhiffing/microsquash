@@ -210,7 +210,11 @@ export class Player extends GameObject3D {
       let currentSideIndex = this.scene.playerTurnIndex
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
       this.scene.ball.impulse(
-        0.005,
+        isServe
+          ? this.sideIndex === 0
+            ? 0.01
+            : -0.01
+          : Phaser.Math.RND.realInRange(-0.005, 0.005),
         0.012,
         0.015 * (isServe ? 1 : this.chargeTimer / 70),
       )

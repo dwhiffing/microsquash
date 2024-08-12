@@ -22,11 +22,7 @@ export class Ball extends GameObject3D {
     this.hasFaulted = false
     this.inPlay = true
     this.bounceCount = 0
-    this.vel = {
-      x: Phaser.Math.RND.realInRange(-x, x),
-      y: Phaser.Math.RND.realInRange(y, y),
-      z: Phaser.Math.RND.realInRange(z, z),
-    }
+    this.vel = { x, y, z }
   }
 
   get isDead() {
