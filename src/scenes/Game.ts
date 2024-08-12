@@ -11,7 +11,9 @@ export class Game extends Scene {
   ball: Ball
   marker: Marker
   player: Player
+  cpu: Player
   score: number
+  playerTurnIndex: 1 | 0
   w: Phaser.Input.Keyboard.Key
   a: Phaser.Input.Keyboard.Key
   s: Phaser.Input.Keyboard.Key
@@ -28,8 +30,10 @@ export class Game extends Scene {
     this.background = this.add.image(0, 0, 'background').setOrigin(0)
     this.ball = new Ball(this)
     this.marker = new Marker(this)
-    this.player = new Player(this)
+    this.player = new Player(this, 'base', 0, false)
+    this.cpu = new Player(this, 'red', 1, true)
     this.score = 0
+    this.playerTurnIndex = 0
 
     this.text = this.add
       .bitmapText(1, 66, 'pixel-dan', '0')
@@ -61,17 +65,8 @@ export class Game extends Scene {
 
     this.ball.update(delta)
     this.player.update(delta)
+    this.cpu.update(delta)
     this.marker.update(delta)
-  }
-
-  updateScore = (value: number) => {
-    this.ball.bounceCount = 0
-    if (value === 0) {
-      this.score = 0
-    } else {
-      this.score += 1
-    }
-    this.text.text = `${this.score}`
   }
 
   updatePrediction() {

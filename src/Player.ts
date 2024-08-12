@@ -17,7 +17,7 @@ export class Player extends GameObject3D {
   sideIndex: number
   onReachTarget?: (value: unknown) => void
 
-  constructor(scene: Game, palette = 'red', autoPlay = true) {
+  constructor(scene: Game, palette = 'base', sideIndex = 0, autoPlay = false) {
     super(
       scene,
       `player-${palette}`,
@@ -35,7 +35,7 @@ export class Player extends GameObject3D {
     }
 
     this.swingTimer = 0
-    this.sideIndex = 0
+    this.sideIndex = sideIndex
     this.sprite.setDepth(10)
 
     this.sprite.anims.play(`player-${this.palette}_idle`)
@@ -44,19 +44,28 @@ export class Player extends GameObject3D {
   }
 
   update(delta: number) {
-    if (this.scene.ball.bounceCount > 2 && !this.isGettingBall) {
+    if (
+      this.scene.ball.bounceCount > 2 &&
+      !this.isGettingBall &&
+      this.isOurTurn
+    ) {
+      this.isGettingBall = true
       this.scene.sleep(500).then(this.onGetBall)
     }
 
     if (this.autoPlay) {
-      if (this.hasBall) {
-        if (!this.isGettingBall) {
-          this.onAction()
-          this.onMoveTo(this.scene.marker.pos)
-        }
-      } else if (this.canSwing() && this.doesSwingHit()) {
-        this.onSwing()
+      if (this.hasBall && !this.isGettingBall) {
+        this.onAction()
         this.onMoveTo(this.scene.marker.pos)
+      }
+      if (this.isOurTurn) {
+        if (!this.targetPosition) {
+          this.onMoveTo(this.scene.marker.pos) // TODO: if we're already on the marker, no need to move
+        }
+        if (!this.hasBall && this.canSwing() && this.doesSwingHit()) {
+          this.onSwing()
+          this.onMoveTo({ x: 0.5, z: 0.5 })
+        }
       }
     }
 
@@ -165,7 +174,8 @@ export class Player extends GameObject3D {
 
     this.swingTimer = 50
     if (this.doesSwingHit()) {
-      this.scene.updateScore(1)
+      this.scene.ball.bounceCount = 0
+      this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
       this.scene.ball.impulse()
       this.scene.updatePrediction()
     }
@@ -184,7 +194,7 @@ export class Player extends GameObject3D {
 
     await this.onMoveTo(this.scene.ball.pos)
     this.togglePickup(true)
-    this.scene.updateScore(0)
+    this.scene.ball.bounceCount = 0
     await this.scene.sleep(500)
 
     const box = this.sideIndex === 0 ? LEFT_BOX : RIGHT_BOX
@@ -204,10 +214,16 @@ export class Player extends GameObject3D {
 
   doesSwingHit() {
     const dist = this.getBallDistance()
-    if (Math.abs(dist.x) + Math.abs(dist.z) > 0.2) return false
-    if (this.scene.ball.pos.y > 0.25) return false
-    if (this.scene.ball.bounceCount >= 2) return false
+    if (Math.abs(dist.x) + Math.abs(dist.z) > 0.2) return false // too far
+    if (this.scene.ball.pos.y > 0.25) return false // too high
+    if (this.scene.ball.bounceCount >= 2) return false // ball is out
+    if (this.scene.ball.vel.z > 0) return false // moving away from player
+
     return true
+  }
+
+  get isOurTurn() {
+    return this.scene.playerTurnIndex === this.sideIndex
   }
 
   canPickup = () => {
