@@ -2,12 +2,13 @@ import { Scene } from 'phaser'
 import { Player } from '../Player'
 import { Ball } from '../Ball'
 import { predictBounce } from '../utils'
-import { GRAVITY, PLAYER_PALETTES } from '../constants'
+import { GRAVITY, PLAYER_PALETTES, WIN_ROUNDS } from '../constants'
 import { Marker } from '../Marker'
 
 export class Game extends Scene {
   background: Phaser.GameObjects.Image
-  text: Phaser.GameObjects.BitmapText
+  homeScoreText: Phaser.GameObjects.BitmapText
+  awayScoreText: Phaser.GameObjects.BitmapText
   ball: Ball
   marker: Marker
   player: Player
@@ -32,14 +33,22 @@ export class Game extends Scene {
     this.marker = new Marker(this)
     this.player = new Player(this, 'base', 0, false)
     this.cpu = new Player(this, 'red', 1, true)
-    this.score = 0
+    this.data.set('homeScore', 0)
+    this.data.set('awayScore', 0)
     this.playerTurnIndex = 0
 
-    this.text = this.add
+    this.homeScoreText = this.add
       .bitmapText(1, 66, 'pixel-dan', '0')
       .setTintFill(0x000000)
       .setFontSize(5)
       .setOrigin(0, 1)
+      .setDepth(999)
+
+    this.awayScoreText = this.add
+      .bitmapText(64, 66, 'pixel-dan', '0')
+      .setTintFill(0x000000)
+      .setFontSize(5)
+      .setOrigin(1, 1)
       .setDepth(999)
 
     if (this.input.keyboard) {
@@ -50,6 +59,29 @@ export class Game extends Scene {
       this.space = this.input.keyboard.addKey(
         Phaser.Input.Keyboard.KeyCodes.SPACE,
       )
+    }
+  }
+
+  onBallOut() {
+    const homeChange = this.playerTurnIndex === 0 ? 0 : 1
+    const awayChange = this.playerTurnIndex === 0 ? 1 : 0
+    this.updateScore(homeChange, awayChange)
+  }
+
+  updateScore(homeChange = 0, awayChange = 0) {
+    this.data.inc('homeChange', homeChange)
+    this.data.inc('awayChange', awayChange)
+
+    this.homeScoreText.setText(this.data.get('homeChange'))
+    this.awayScoreText.setText(this.data.get('awayChange'))
+
+    if (
+      this.data.get('homeChange') >= WIN_ROUNDS ||
+      this.data.get('awayChange') >= WIN_ROUNDS
+    ) {
+      this.scene.start('Menu', {
+        winnerIndex: this.data.get('homeChange') >= WIN_ROUNDS ? 0 : 1,
+      })
     }
   }
 

@@ -62,6 +62,9 @@ export class GameObject3D {
       this.gravityEnabled ? GRAVITY : 0,
       () => {
         this.bounceCount++
+        if (this.bounceCount === 2) {
+          this.scene.onBallOut()
+        }
       },
     )
 
