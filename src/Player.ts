@@ -207,6 +207,7 @@ export class Player extends GameObject3D {
 
     this.swingTimer = 50
     if (isServe || this.doesSwingHit()) {
+      let currentSideIndex = this.scene.playerTurnIndex
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
       this.scene.ball.impulse(
         0.005,
@@ -214,6 +215,11 @@ export class Player extends GameObject3D {
         0.015 * (isServe ? 1 : this.chargeTimer / 70),
       )
       this.scene.updatePrediction()
+
+      if (currentSideIndex !== this.sideIndex) {
+        this.scene.ball.hasFaulted = true
+        this.scene.onBallOut()
+      }
     }
   }
 
