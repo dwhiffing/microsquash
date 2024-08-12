@@ -48,9 +48,10 @@ export class Player extends GameObject3D {
 
   update(delta: number) {
     if (
-      this.scene.ball.bounceCount >= 2 &&
+      !this.scene.ball.inPlay &&
       !this.isGettingBall &&
-      this.isOurTurn
+      this.isOurTurn &&
+      !this.hasBall
     ) {
       this.isGettingBall = true
       this.scene.sleep(500).then(this.onGetBall)
@@ -206,7 +207,6 @@ export class Player extends GameObject3D {
 
     this.swingTimer = 50
     if (isServe || this.doesSwingHit()) {
-      this.scene.ball.bounceCount = 0
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
       this.scene.ball.impulse(
         0.005,
@@ -230,7 +230,6 @@ export class Player extends GameObject3D {
 
     await this.onMoveTo(this.scene.ball.pos)
     this.togglePickup(true)
-    this.scene.ball.bounceCount = 0
     await this.scene.sleep(500)
 
     const box = this.sideIndex === 0 ? LEFT_BOX : RIGHT_BOX
@@ -252,7 +251,7 @@ export class Player extends GameObject3D {
     const dist = this.getBallDistance()
     if (Math.abs(dist.x) + Math.abs(dist.z) > 0.2) return false // too far
     if (this.scene.ball.pos.y > 0.25) return false // too high
-    if (this.scene.ball.bounceCount >= 2) return false // ball is out
+    if (!this.scene.ball.inPlay) return false // ball is out
     if (!this.scene.ball.hitBackWall) return false // moving away from player
 
     return true
