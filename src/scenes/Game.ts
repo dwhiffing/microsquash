@@ -32,7 +32,10 @@ export class Game extends Scene {
     this.ball = new Ball(this)
     this.marker = new Marker(this)
     this.player = new Player(this, 'base', 0, false)
+    this.player.togglePickup(true)
+    this.player.pos = { x: 0.08, y: 0, z: 0.4 }
     this.cpu = new Player(this, 'red', 1, true)
+    this.cpu.pos = { x: 0.65, y: 0, z: 0.35 }
     this.data.set('homeScore', 0)
     this.data.set('awayScore', 0)
     this.playerTurnIndex = 0
