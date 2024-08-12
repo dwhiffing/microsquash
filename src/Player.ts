@@ -11,7 +11,9 @@ export class Player extends GameObject3D {
   hasBall: boolean
   autoPlay: boolean
   isGettingBall: boolean
+  isCharging: boolean
   swingTimer: number
+  chargeTimer: number
   palette: string
   targetPosition?: { x: number; z: number }
   sideIndex: number
@@ -35,6 +37,7 @@ export class Player extends GameObject3D {
     }
 
     this.swingTimer = 0
+    this.chargeTimer = 0
     this.sideIndex = sideIndex
     this.sprite.setDepth(10)
 
@@ -53,6 +56,10 @@ export class Player extends GameObject3D {
       this.scene.sleep(500).then(this.onGetBall)
     }
 
+    if (this.isCharging && this.chargeTimer < 100) {
+      this.chargeTimer++
+    }
+
     if (this.autoPlay) {
       if (this.hasBall && !this.isGettingBall) {
         this.onAction()
@@ -63,8 +70,10 @@ export class Player extends GameObject3D {
           this.onMoveTo(this.scene.marker.pos) // TODO: if we're already on the marker, no need to move
         }
         if (!this.hasBall && this.canSwing() && this.doesSwingHit()) {
-          this.onSwing()
           this.onMoveTo({ x: 0.5, z: 0.5 })
+          this.startSwing()
+          this.chargeTimer = Phaser.Math.RND.between(20, 80)
+          this.onSwing()
         }
       }
     }
@@ -87,6 +96,9 @@ export class Player extends GameObject3D {
         this.onReachTarget?.(undefined)
         this.onReachTarget = undefined
         this.targetPosition = undefined
+        this.scene.sleep(150).then(() => {
+          this.sprite.anims.play(`player-${this.palette}_idle`)
+        })
       }
       if (Math.abs(xdiff) > 0.05) {
         directions.push(xdiff > 0 ? 1 : 3)
@@ -108,7 +120,9 @@ export class Player extends GameObject3D {
 
   onMove(directions: number[]) {
     const max = PLAYER_MAX_SPEED
-    const speed = PLAYER_SPEED / Math.sqrt(directions.length)
+    const speed =
+      (PLAYER_SPEED / Math.sqrt(directions.length)) *
+      (this.isCharging ? 0.4 : 1)
 
     if (directions.includes(0)) {
       this.vel.z = Math.max(-max, this.vel.z - speed)
@@ -135,7 +149,10 @@ export class Player extends GameObject3D {
         this.sprite.anims.play(`player-${this.palette}_idle`)
       }
     } else {
-      if (this.sprite.anims.currentAnim?.key.includes('idle')) {
+      if (
+        !this.isCharging &&
+        this.sprite.anims.currentAnim?.key.includes('idle')
+      ) {
         this.sprite.anims.play(`player-${this.palette}_walk`)
       }
     }
@@ -158,11 +175,25 @@ export class Player extends GameObject3D {
       // TODO: should toss ball upward and lock player movement
       this.onSwing(true)
     } else if (this.canSwing()) {
+      this.startSwing()
+    }
+  }
+
+  onActionEnd = () => {
+    if (this.isCharging && this.canSwing()) {
       this.onSwing()
     }
   }
 
+  startSwing() {
+    if (this.isCharging) return
+    this.sprite.anims.play(`player-${this.palette}_idle`)
+    this.chargeTimer = 20
+    this.isCharging = true
+  }
+
   onSwing(isServe = false) {
+    this.isCharging = false
     const dist = this.getBallDistance()
     this.sprite.setFlipX(dist.x > 0)
     const isOverhead = isServe || dist.y < -0.15
@@ -177,7 +208,11 @@ export class Player extends GameObject3D {
     if (this.doesSwingHit()) {
       this.scene.ball.bounceCount = 0
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
-      this.scene.ball.impulse()
+      this.scene.ball.impulse(
+        0.005,
+        0.012,
+        0.015 * (isServe ? 1 : this.chargeTimer / 70),
+      )
       this.scene.updatePrediction()
     }
   }
@@ -218,7 +253,7 @@ export class Player extends GameObject3D {
     if (Math.abs(dist.x) + Math.abs(dist.z) > 0.2) return false // too far
     if (this.scene.ball.pos.y > 0.25) return false // too high
     if (this.scene.ball.bounceCount >= 2) return false // ball is out
-    if (this.scene.ball.vel.z > 0) return false // moving away from player
+    // if (this.scene.ball.vel.z > 0) return false // moving away from player
 
     return true
   }

@@ -11,18 +11,11 @@ export class Ball extends GameObject3D {
     this.bounceCount = 3
   }
 
-  impulse = (
-    minX = -0.005,
-    maxX = 0.005,
-    minY = 0.012,
-    maxY = 0.012,
-    minZ = 0.015,
-    maxZ = 0.015,
-  ) => {
+  impulse = (x = 0.005, y = 0.012, z = 0.015) => {
     this.vel = {
-      x: Phaser.Math.RND.realInRange(minX, maxX),
-      y: Phaser.Math.RND.realInRange(minY, maxY),
-      z: Phaser.Math.RND.realInRange(minZ, maxZ),
+      x: Phaser.Math.RND.realInRange(-x, x),
+      y: Phaser.Math.RND.realInRange(y, y),
+      z: Phaser.Math.RND.realInRange(z, z),
     }
   }
 

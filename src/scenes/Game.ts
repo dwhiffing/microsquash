@@ -90,6 +90,7 @@ export class Game extends Scene {
 
   update(_: number, delta: number) {
     if (Phaser.Input.Keyboard.JustDown(this.space)) this.player.onAction()
+    if (Phaser.Input.Keyboard.JustUp(this.space)) this.player.onActionEnd()
 
     let directions = []
     if (this.w.isDown) directions.push(2)
