@@ -153,6 +153,7 @@ export class Player extends GameObject3D {
 
   onAction = () => {
     if (this.hasBall) {
+      if (this.isGettingBall) return
       this.togglePickup(false)
       // TODO: should toss ball upward and lock player movement
       this.onSwing(true)
