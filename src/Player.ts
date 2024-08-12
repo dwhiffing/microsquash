@@ -48,7 +48,7 @@ export class Player extends GameObject3D {
 
   update(delta: number) {
     if (
-      this.scene.ball.bounceCount > 2 &&
+      this.scene.ball.bounceCount >= 2 &&
       !this.isGettingBall &&
       this.isOurTurn
     ) {
