@@ -40,8 +40,8 @@ export class GameObject3D {
 
   setPosition = () => {
     const { x, y, z } = this.pos
-    const l = lerp(S + 1, S / 2 - this.width, z)
-    const _x = (S - l) / 2 + lerp(0, l, x)
+    const l = Math.floor(lerp(S + 1, S / 2 - this.width, z))
+    const _x = (S - l) / 2 + lerp(0, l - 1, x)
     const _z = S - W + (1 - z) * W
 
     const l2 = lerp(S, S - W - 1, z)

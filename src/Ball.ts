@@ -95,6 +95,8 @@ export class Ball extends GameObject3D {
   }
 
   onBounce(axis: string, isGround: boolean) {
+    if (!this.gravityEnabled) return
+
     if (axis === 'z') {
       this.bounceEmitterZ.emitParticleAt(this.sprite.x - 1, this.sprite.y - 2)
     }
