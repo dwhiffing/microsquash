@@ -31,7 +31,7 @@ export class Game extends Scene {
     this.background = this.add.image(0, 0, 'background').setOrigin(0)
     this.ball = new Ball(this)
     this.marker = new Marker(this)
-    this.player = new Player(this, 'base', 0, false)
+    this.player = new Player(this, 'base', 0, true)
     this.player.togglePickup(true)
     this.player.pos = { x: 0.08, y: 0, z: 0.4 }
     this.cpu = new Player(this, 'red', 1, true)
@@ -40,12 +40,34 @@ export class Game extends Scene {
     this.data.set('awayScore', 0)
     this.playerTurnIndex = 0
 
+    this.events.on('startGame', () => {
+      this.onBallOut()
+      this.data.set('homeScore', 0)
+      this.data.set('awayScore', 0)
+      this.updateScore()
+      this.playerTurnIndex = 0
+
+      this.player.autoPlay = false
+      this.tweens.add({
+        targets: [
+          this.homeScoreText,
+          this.awayScoreText,
+          this.player.sprite,
+          this.cpu.sprite,
+        ],
+        alpha: 1,
+        duration: 500,
+        delay: 1000,
+      })
+    })
+
     this.homeScoreText = this.add
       .bitmapText(1, 66, 'pixel-dan', '0')
       .setTintFill(0x000000)
       .setFontSize(5)
       .setOrigin(0, 1)
       .setDepth(999)
+      .setAlpha(0)
 
     this.awayScoreText = this.add
       .bitmapText(64, 66, 'pixel-dan', '0')
@@ -53,6 +75,7 @@ export class Game extends Scene {
       .setFontSize(5)
       .setOrigin(1, 1)
       .setDepth(999)
+      .setAlpha(0)
 
     if (this.input.keyboard) {
       this.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
@@ -89,10 +112,19 @@ export class Game extends Scene {
       this.data.get('homeScore') >= WIN_ROUNDS ||
       this.data.get('awayScore') >= WIN_ROUNDS
     ) {
-      this.time.delayedCall(1500, () => {
-        this.scene.start('Menu', {
-          winnerIndex: this.data.get('homeScore') >= WIN_ROUNDS ? 0 : 1,
-        })
+      if (this.player.autoPlay) return
+
+      this.tweens.add({
+        targets: [this.homeScoreText, this.awayScoreText],
+        alpha: 0,
+        delay: 1000,
+        duration: 500,
+        onComplete: () => {
+          this.player.autoPlay = true
+          this.scene.get('Menu').events.emit('gameOver', {
+            winnerIndex: this.data.get('homeScore') >= WIN_ROUNDS ? 0 : 1,
+          })
+        },
       })
     }
   }
