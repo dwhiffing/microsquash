@@ -13,6 +13,7 @@ export class Player extends GameObject3D {
   hasBall: boolean
   autoPlay: boolean
   isGettingBall: boolean
+  isResetting: boolean
   isCharging: boolean
   isSwingReady: boolean
   chargeTimer: number
@@ -49,6 +50,7 @@ export class Player extends GameObject3D {
   }
 
   update(delta: number) {
+    // get ball if its our serve and point is over
     if (
       !this.scene.ball.inPlay &&
       !this.isGettingBall &&
@@ -59,10 +61,30 @@ export class Player extends GameObject3D {
       this.scene.sleep(500).then(this.onGetBall)
     }
 
+    // reset position when other player is getting ball
+    if (!this.scene.ball.inPlay && !this.isResetting && !this.isOurTurn) {
+      if (
+        Math.abs(this.pos.x - (this.sideIndex === 0 ? 0.35 : 0.65)) +
+          Math.abs(this.pos.z - 0.35) >
+        0.1
+      ) {
+        this.isResetting = true
+        this.scene.sleep(500).then(this.onReset)
+      }
+    }
+
+    // if we are charging, increment charge
     if (this.isCharging && this.chargeTimer < MAX_CHARGE) {
       this.chargeTimer += delta / 7
     }
 
+    // if we have the ball, keep it fixed to our position
+    if (this.hasBall) {
+      this.scene.ball.pos = { ...this.pos, y: this.pos.y + 0.1 }
+      this.scene.ball.vel = { ...this.vel, y: this.vel.y }
+    }
+
+    // if we are a cpu player, play automatically
     if (this.autoPlay) {
       if (this.hasBall && !this.isGettingBall) {
         this.onAction()
@@ -86,11 +108,7 @@ export class Player extends GameObject3D {
       }
     }
 
-    if (this.hasBall) {
-      this.scene.ball.pos = { ...this.pos, y: this.pos.y + 0.1 }
-      this.scene.ball.vel = { ...this.vel, y: this.vel.y }
-    }
-
+    // if we have a target position, move us toward that position
     if (this.targetPosition) {
       let directions: number[] = []
       const xdiff = this.pos.x - this.targetPosition.x
@@ -275,6 +293,13 @@ export class Player extends GameObject3D {
     await this.scene.sleep(500)
 
     this.isGettingBall = false
+  }
+
+  onReset = async () => {
+    console.log('reset')
+    this.isResetting = true
+    await this.onMoveTo({ x: this.sideIndex === 0 ? 0.35 : 0.65, z: 0.35 })
+    this.isResetting = false
   }
 
   canSwing() {
