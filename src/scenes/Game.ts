@@ -139,15 +139,17 @@ export class Game extends Scene {
   }
 
   update(_: number, delta: number) {
-    if (Phaser.Input.Keyboard.JustDown(this.space)) this.player.onAction()
-    if (Phaser.Input.Keyboard.JustUp(this.space)) this.player.onActionEnd()
+    if (!this.player.autoPlay) {
+      if (Phaser.Input.Keyboard.JustDown(this.space)) this.player.onAction()
+      if (Phaser.Input.Keyboard.JustUp(this.space)) this.player.onActionEnd()
 
-    let directions = []
-    if (this.w.isDown || this.up.isDown) directions.push(2)
-    if (this.a.isDown || this.left.isDown) directions.push(1)
-    if (this.s.isDown || this.down.isDown) directions.push(0)
-    if (this.d.isDown || this.right.isDown) directions.push(3)
-    this.player.handleInput(directions)
+      let directions = []
+      if (this.w.isDown || this.up.isDown) directions.push(2)
+      if (this.a.isDown || this.left.isDown) directions.push(1)
+      if (this.s.isDown || this.down.isDown) directions.push(0)
+      if (this.d.isDown || this.right.isDown) directions.push(3)
+      this.player.handleInput(directions)
+    }
 
     this.ball.update(delta)
     this.player.update(delta)
