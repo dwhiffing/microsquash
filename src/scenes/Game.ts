@@ -79,18 +79,18 @@ export class Game extends Scene {
   }
 
   updateScore(homeChange = 0, awayChange = 0) {
-    this.data.inc('homeChange', homeChange)
-    this.data.inc('awayChange', awayChange)
+    this.data.inc('homeScore', homeChange)
+    this.data.inc('awayScore', awayChange)
 
-    this.homeScoreText.setText(this.data.get('homeChange'))
-    this.awayScoreText.setText(this.data.get('awayChange'))
+    this.homeScoreText.setText(this.data.get('homeScore'))
+    this.awayScoreText.setText(this.data.get('awayScore'))
 
     if (
-      this.data.get('homeChange') >= WIN_ROUNDS ||
-      this.data.get('awayChange') >= WIN_ROUNDS
+      this.data.get('homeScore') >= WIN_ROUNDS ||
+      this.data.get('awayScore') >= WIN_ROUNDS
     ) {
       this.scene.start('Menu', {
-        winnerIndex: this.data.get('homeChange') >= WIN_ROUNDS ? 0 : 1,
+        winnerIndex: this.data.get('homeScore') >= WIN_ROUNDS ? 0 : 1,
       })
     }
   }
@@ -130,6 +130,7 @@ export class Game extends Scene {
   sleep = (d: number) => new Promise((r) => this.time.delayedCall(d, r))
 
   createSprites = () => {
+    if (this.anims.exists('player-base_walk')) return
     const texture = this.textures.get('player-base')
     const { width: frameWidth, height: frameHeight } =
       texture.getFramesFromTextureSource(0)[0]
