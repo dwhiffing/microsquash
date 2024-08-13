@@ -89,8 +89,10 @@ export class Game extends Scene {
       this.data.get('homeScore') >= WIN_ROUNDS ||
       this.data.get('awayScore') >= WIN_ROUNDS
     ) {
-      this.scene.start('Menu', {
-        winnerIndex: this.data.get('homeScore') >= WIN_ROUNDS ? 0 : 1,
+      this.time.delayedCall(1500, () => {
+        this.scene.start('Menu', {
+          winnerIndex: this.data.get('homeScore') >= WIN_ROUNDS ? 0 : 1,
+        })
       })
     }
   }
