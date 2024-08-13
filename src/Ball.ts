@@ -15,6 +15,7 @@ export class Ball extends GameObject3D {
   hitBackWall = false
   inPlay = false
   isServe = false
+  burstEmitter: Phaser.GameObjects.Particles.ParticleEmitter
   trailEmitter: Phaser.GameObjects.Particles.ParticleEmitter
   bounceEmitterZ: Phaser.GameObjects.Particles.ParticleEmitter
   bounceEmitterX: Phaser.GameObjects.Particles.ParticleEmitter
@@ -36,6 +37,17 @@ export class Ball extends GameObject3D {
         scale: 2,
       })
       .startFollow(this.sprite, -1, -2)
+    this.burstEmitter = this.scene.add
+      .particles(0, 0, 'ball', {
+        tintFill: true,
+        emitting: false,
+        lifespan: { max: 800, min: 500 },
+        alpha: { start: 0.8, end: 0 },
+        speed: { min: -20, max: 20 },
+        scale: 1,
+      })
+      .startFollow(this.sprite, -1, -2)
+      .setDepth(0)
 
     this.bounceEmitterZ = this.scene.add
       .particles(0, 0, 'ball', {
@@ -65,8 +77,14 @@ export class Ball extends GameObject3D {
     this.inPlay = true
     this.bounceCount = 0
     this.vel = { x, y, z }
-    this.trailEmitter.particleTint =
-      this.scene.playerTurnIndex === 0 ? 0xe53030 : 0xedcf4c
+    const color = this.scene.playerTurnIndex === 0 ? 0xe53030 : 0xedcf4c
+    this.trailEmitter.particleTint = color
+    this.burstEmitter.particleTint = color
+
+    const burstCount = (z / 0.02) * 25
+    const burstSpeed = (z / 0.02) * 30
+    this.burstEmitter.speed = { min: -burstSpeed, max: burstSpeed }
+    this.burstEmitter.emitParticleAt(this.sprite.x, this.sprite.y, burstCount)
   }
 
   get isDead() {
