@@ -32,7 +32,7 @@ export class Ball extends GameObject3D {
     this.trailEmitter = this.scene.add
       .particles(0, 0, 'ball', {
         tintFill: true,
-        alpha: { start: 0.5, end: 0 },
+        alpha: { start: 0.35, end: 0 },
         scale: 2,
       })
       .startFollow(this.sprite, -1, -2)
@@ -85,7 +85,7 @@ export class Ball extends GameObject3D {
 
   update(delta: number) {
     if (Math.abs(this.vel.z) > 0.001 && this.inPlay) {
-      this.trailEmitter.lifespan = Math.abs(this.vel.z) * 20000
+      this.trailEmitter.lifespan = Math.abs(this.vel.z) * 25000
       this.trailEmitter.start()
     } else {
       this.trailEmitter.stop()
