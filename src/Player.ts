@@ -37,10 +37,6 @@ export class Player extends GameObject3D {
     this.palette = palette
     this.autoPlay = autoPlay
 
-    if (autoPlay) {
-      this.sprite.setAlpha(0.7)
-    }
-
     this.isSwingReady = true
     this.chargeTimer = 0
     this.sideIndex = sideIndex
@@ -105,6 +101,13 @@ export class Player extends GameObject3D {
         })
       }
       if (this.isOurTurn) {
+        if (this.sprite.alpha !== 1) {
+          this.scene.tweens.add({
+            targets: this.sprite,
+            alpha: 1,
+            duration: 250,
+          })
+        }
         if (!this.targetPosition && this.scene.ball.inPlay) {
           const diff =
             Math.abs(this.pos.z - this.scene.marker.pos.z) +
@@ -287,6 +290,14 @@ export class Player extends GameObject3D {
         x += inputXBias
         y += inputYBias
         z *= chargeRatio
+      }
+
+      if (this.autoPlay) {
+        this.scene.tweens.add({
+          targets: this.sprite,
+          alpha: 0.4,
+          duration: 250,
+        })
       }
 
       this.scene.ball.impulse(x, y, z)
