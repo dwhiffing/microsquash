@@ -16,6 +16,7 @@ export class Player extends GameObject3D {
   isResetting: boolean
   hasReset: boolean
   isCharging: boolean
+  isServing: boolean
   isSwingReady: boolean
   chargeTimer: number
   palette: string
@@ -56,7 +57,8 @@ export class Player extends GameObject3D {
       !this.scene.ball.inPlay &&
       !this.isGettingBall &&
       this.isOurTurn &&
-      !this.hasBall
+      !this.hasBall &&
+      !this.isServing
     ) {
       this.isGettingBall = true
       this.scene.sleep(500).then(this.onGetBall)
@@ -79,7 +81,13 @@ export class Player extends GameObject3D {
     }
 
     // if we have the ball, keep it fixed to our position
-    if (this.hasBall) {
+    if (this.isServing && !this.hasBall && this.scene.ball.pos.y < 0.05) {
+      this.togglePickup(true)
+      this.isServing = false
+    }
+
+    // if we have the ball, keep it fixed to our position
+    if (this.hasBall && !this.isServing) {
       this.scene.ball.pos = { ...this.pos, y: this.pos.y + 0.1 }
       this.scene.ball.vel = { ...this.vel, y: this.vel.y }
     }
@@ -88,8 +96,12 @@ export class Player extends GameObject3D {
     if (this.autoPlay) {
       if (this.hasBall && !this.isGettingBall) {
         this.onAction()
-        this.scene.sleep(500).then(() => {
-          this.onMoveTo({ x: 0.5, z: 0.5 })
+        this.scene.sleep(150).then(() => {
+          this.startSwing()
+          this.onSwing()
+          this.scene.sleep(250).then(() => {
+            this.onMoveTo({ x: 0.5, z: 0.5 })
+          })
         })
       }
       if (this.isOurTurn) {
@@ -99,7 +111,12 @@ export class Player extends GameObject3D {
             Math.abs(this.pos.x - this.scene.marker.pos.x)
           if (diff > 0.1) this.onMoveTo(this.scene.marker.pos)
         }
-        if (!this.hasBall && this.canSwing() && this.doesSwingHit()) {
+        if (
+          !this.isServing &&
+          !this.hasBall &&
+          this.canSwing() &&
+          this.doesSwingHit()
+        ) {
           this.onMoveTo({ x: 0.5, z: 0.5 })
           this.startSwing()
           this.chargeTimer = Phaser.Math.RND.between(MIN_CHARGE, MAX_CHARGE)
@@ -145,6 +162,8 @@ export class Player extends GameObject3D {
     const speed =
       (PLAYER_SPEED / Math.sqrt(directions.length)) *
       (this.isCharging ? 0.4 : 1)
+
+    if (this.isServing) return
 
     if (directions.includes(0)) {
       this.vel.z = Math.max(-max, this.vel.z - speed)
@@ -193,9 +212,7 @@ export class Player extends GameObject3D {
   onAction = () => {
     if (this.hasBall) {
       if (this.isGettingBall) return
-      this.togglePickup(false)
-      // TODO: should toss ball upward and lock player movement
-      this.onSwing(true)
+      this.startServe()
     } else if (this.canSwing()) {
       this.startSwing()
     }
@@ -207,6 +224,16 @@ export class Player extends GameObject3D {
     }
   }
 
+  startServe() {
+    if (this.isServing) return
+    this.isServing = true
+    this.togglePickup(false)
+    this.sprite.anims.play(`player-${this.palette}_idle`)
+    this.vel = { x: 0, y: 0, z: 0 }
+    this.scene.ball.vel = { x: 0, y: 0.009, z: 0 }
+    this.scene.ball.pos.x += 0.02
+  }
+
   startSwing() {
     if (this.isCharging) return
     this.sprite.anims.play(`player-${this.palette}_idle`)
@@ -214,11 +241,11 @@ export class Player extends GameObject3D {
     this.isCharging = true
   }
 
-  onSwing(isServe = false) {
+  onSwing() {
     this.isCharging = false
     const dist = this.getBallDistance()
     this.sprite.setFlipX(dist.x > 0)
-    const isOverhead = isServe || dist.y < -0.15
+    const isOverhead = this.isServing || dist.y < -0.15
     this.sprite.anims.play(
       isOverhead
         ? `player-${this.palette}_swingover`
@@ -231,7 +258,7 @@ export class Player extends GameObject3D {
       this.isSwingReady = true
     })
 
-    if (isServe || this.doesSwingHit()) {
+    if (this.doesSwingHit()) {
       let currentSideIndex = this.scene.playerTurnIndex
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
 
@@ -250,10 +277,12 @@ export class Player extends GameObject3D {
       let y = 0.012
       let z = 0.015
 
-      if (isServe) {
+      if (this.isServing) {
         let serveBias = 0.006
         if (this.sideIndex === 1) serveBias *= -1
         x = serveBias
+
+        z *= 0.25 + this.scene.ball.pos.y / 0.3
       } else {
         x += inputXBias
         y += inputYBias
@@ -261,7 +290,8 @@ export class Player extends GameObject3D {
       }
 
       this.scene.ball.impulse(x, y, z)
-      this.scene.ball.isServe = isServe
+      this.scene.ball.isServe = this.isServing
+      this.isServing = false
       this.scene.updatePrediction()
 
       if (currentSideIndex !== this.sideIndex) {
@@ -311,9 +341,9 @@ export class Player extends GameObject3D {
   doesSwingHit() {
     const dist = this.getBallDistance()
     if (Math.abs(dist.x) + Math.abs(dist.z) > 0.2) return false // too far
-    if (this.scene.ball.pos.y > 0.25) return false // too high
-    if (!this.scene.ball.inPlay) return false // ball is out
-    if (!this.scene.ball.hitBackWall) return false // moving away from player
+    if (this.scene.ball.pos.y > 0.3) return false // too high
+    if (!this.scene.ball.inPlay && !this.isServing) return false // ball is out
+    if (!this.scene.ball.hitBackWall && !this.isServing) return false // moving away from player
 
     return true
   }
