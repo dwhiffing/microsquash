@@ -74,6 +74,8 @@ export class Game extends Scene {
     const awayChange = isHomePoint ? 0 : 1
     this.updateScore(homeChange, awayChange)
     this.playerTurnIndex = isHomePoint ? 0 : 1
+    this.player.hasReset = false
+    this.cpu.hasReset = false
   }
 
   updateScore(homeChange = 0, awayChange = 0) {

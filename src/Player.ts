@@ -14,6 +14,7 @@ export class Player extends GameObject3D {
   autoPlay: boolean
   isGettingBall: boolean
   isResetting: boolean
+  hasReset: boolean
   isCharging: boolean
   isSwingReady: boolean
   chargeTimer: number
@@ -62,15 +63,14 @@ export class Player extends GameObject3D {
     }
 
     // reset position when other player is getting ball
-    if (!this.scene.ball.inPlay && !this.isResetting && !this.isOurTurn) {
-      if (
-        Math.abs(this.pos.x - (this.sideIndex === 0 ? 0.35 : 0.65)) +
-          Math.abs(this.pos.z - 0.35) >
-        0.1
-      ) {
-        this.isResetting = true
-        this.scene.sleep(500).then(this.onReset)
-      }
+    if (
+      !this.scene.ball.inPlay &&
+      !this.isResetting &&
+      !this.isOurTurn &&
+      !this.hasReset
+    ) {
+      this.isResetting = true
+      this.scene.sleep(500).then(this.onReset)
     }
 
     // if we are charging, increment charge
@@ -296,8 +296,8 @@ export class Player extends GameObject3D {
   }
 
   onReset = async () => {
-    console.log('reset')
     this.isResetting = true
+    this.hasReset = true
     await this.onMoveTo({ x: this.sideIndex === 0 ? 0.35 : 0.65, z: 0.35 })
     this.isResetting = false
   }
