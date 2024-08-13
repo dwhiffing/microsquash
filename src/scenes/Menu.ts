@@ -14,6 +14,7 @@ export class Menu extends Scene {
   optionIndex: number
   helpIndex: number
   isActive: boolean
+  isDifficultySelect: boolean
   isHelp: boolean
 
   constructor() {
@@ -23,6 +24,7 @@ export class Menu extends Scene {
   create() {
     this.isActive = true
     this.isHelp = false
+    this.isDifficultySelect = false
     this.optionIndex = 1
     this.winnerIndex = -1
     this.helpIndex = 0
@@ -90,11 +92,11 @@ export class Menu extends Scene {
 
   setOption = () => {
     this.arrow.clear()
-    //  sound && this.sound.play('click')
-    if (this.optionIndex < 0) this.optionIndex = 1
-    if (this.optionIndex > 1) this.optionIndex = 0
+    const maxOptions = this.isDifficultySelect ? 3 : 2
+    if (this.optionIndex < 0) this.optionIndex = maxOptions - 1
+    if (this.optionIndex > maxOptions - 1) this.optionIndex = 0
     const x = 20
-    const h = 50
+    const h = maxOptions === 2 ? 50 : 42
     const h2 = 8
     this.arrow
       .fillStyle(0x000000)
@@ -104,10 +106,14 @@ export class Menu extends Scene {
 
   confirm = () => {
     if (!this.isActive) return
-    if (this.optionIndex === 0) {
+    if (this.isDifficultySelect) {
       this.startGame()
     } else {
-      this.toggleHelp()
+      if (this.optionIndex === 0) {
+        this.showDifficulties()
+      } else {
+        this.toggleHelp()
+      }
     }
   }
 
@@ -131,11 +137,21 @@ export class Menu extends Scene {
     this.fade(this.isHelp ? 0 : 1, this.isHelp ? BG_ALPHA * 2.5 : BG_ALPHA)
   }
 
+  showDifficulties = () => {
+    this.isDifficultySelect = true
+    this.optionText.setText(`EASY\nFAIR\nHARD`)
+    this.setOption()
+  }
+
   startGame = () => {
     this.isActive = false
+    this.isDifficultySelect = false
 
     this.fade(0).then(() => {
-      this.scene.get('Game').events.emit('startGame')
+      this.optionText.setText('PLAY\nHELP')
+      this.scene
+        .get('Game')
+        .events.emit('startGame', { skillLevel: this.optionIndex })
     })
   }
 
@@ -158,12 +174,12 @@ export class Menu extends Scene {
 
   up = () => {
     if (!this.isActive) return
-    this.optionIndex++
+    this.optionIndex--
     this.setOption()
   }
   down = () => {
     if (!this.isActive) return
-    this.optionIndex--
+    this.optionIndex++
     this.setOption()
   }
   left = () => {

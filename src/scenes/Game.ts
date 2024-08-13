@@ -44,26 +44,7 @@ export class Game extends Scene {
     this.data.set('awayScore', 0)
     this.playerTurnIndex = 0
 
-    this.events.on('startGame', () => {
-      this.onBallOut()
-      this.data.set('homeScore', 0)
-      this.data.set('awayScore', 0)
-      this.updateScore()
-      this.playerTurnIndex = 0
-
-      this.player.autoPlay = false
-      this.tweens.add({
-        targets: [
-          this.homeScoreText,
-          this.awayScoreText,
-          this.player.sprite,
-          this.cpu.sprite,
-        ],
-        alpha: 1,
-        duration: 500,
-        delay: 1000,
-      })
-    })
+    this.events.on('startGame', this.onStartGame)
 
     this.homeScoreText = this.add
       .bitmapText(1, 66, 'pixel-dan', '0')
@@ -97,6 +78,43 @@ export class Game extends Scene {
     }
   }
 
+  onStartGame = (args: { skillLevel: number }) => {
+    console.log(args)
+    this.onBallOut()
+    this.data.set('homeScore', 0)
+    this.data.set('awayScore', 0)
+    this.updateScore()
+    this.playerTurnIndex = 0
+
+    this.player.autoPlay = false
+    this.tweens.add({
+      targets: [
+        this.homeScoreText,
+        this.awayScoreText,
+        this.player.sprite,
+        this.cpu.sprite,
+      ],
+      alpha: 1,
+      duration: 500,
+      delay: 1000,
+    })
+  }
+
+  onEndGame = () => {
+    this.tweens.add({
+      targets: [this.homeScoreText, this.awayScoreText],
+      alpha: 0,
+      delay: 1000,
+      duration: 500,
+      onComplete: () => {
+        this.player.autoPlay = true
+        this.scene.get('Menu').events.emit('gameOver', {
+          winnerIndex: this.data.get('homeScore') >= WIN_ROUNDS ? 0 : 1,
+        })
+      },
+    })
+  }
+
   onBallOut() {
     if (!this.ball.inPlay) return
     this.ball.inPlay = false
@@ -123,18 +141,7 @@ export class Game extends Scene {
     ) {
       if (this.player.autoPlay) return
 
-      this.tweens.add({
-        targets: [this.homeScoreText, this.awayScoreText],
-        alpha: 0,
-        delay: 1000,
-        duration: 500,
-        onComplete: () => {
-          this.player.autoPlay = true
-          this.scene.get('Menu').events.emit('gameOver', {
-            winnerIndex: this.data.get('homeScore') >= WIN_ROUNDS ? 0 : 1,
-          })
-        },
-      })
+      this.onEndGame()
     }
   }
 
