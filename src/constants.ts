@@ -8,7 +8,7 @@ export const AVG_DELTA = 8.3
 export const TIMESCALE = 1
 export const WIN_ROUNDS = 11
 
-export const PLAYER_MAX_SPEED = 0.004
+export const PLAYER_MAX_SPEED = 0.0045
 export const PLAYER_SPEED = 0.0003
 
 export const LEFT_BOX = {
