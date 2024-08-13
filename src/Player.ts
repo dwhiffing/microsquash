@@ -210,8 +210,8 @@ export class Player extends GameObject3D {
   }
 
   onAction = () => {
+    if (this.isGettingBall || this.isResetting) return
     if (this.hasBall) {
-      if (this.isGettingBall) return
       this.startServe()
     } else if (this.canSwing()) {
       this.startSwing()
