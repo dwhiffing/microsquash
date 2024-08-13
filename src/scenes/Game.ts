@@ -19,6 +19,10 @@ export class Game extends Scene {
   a: Phaser.Input.Keyboard.Key
   s: Phaser.Input.Keyboard.Key
   d: Phaser.Input.Keyboard.Key
+  up: Phaser.Input.Keyboard.Key
+  left: Phaser.Input.Keyboard.Key
+  right: Phaser.Input.Keyboard.Key
+  down: Phaser.Input.Keyboard.Key
   space: Phaser.Input.Keyboard.Key
 
   constructor() {
@@ -78,13 +82,18 @@ export class Game extends Scene {
       .setAlpha(0)
 
     if (this.input.keyboard) {
-      this.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
-      this.a = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
-      this.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S)
-      this.d = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
-      this.space = this.input.keyboard.addKey(
-        Phaser.Input.Keyboard.KeyCodes.SPACE,
-      )
+      const keys = this.input.keyboard.addKeys(
+        'W,A,S,D,UP,LEFT,RIGHT,DOWN,SPACE',
+      ) as any
+      this.w = keys.W
+      this.a = keys.A
+      this.s = keys.S
+      this.d = keys.D
+      this.up = keys.UP
+      this.down = keys.DOWN
+      this.left = keys.LEFT
+      this.right = keys.RIGHT
+      this.space = keys.SPACE
     }
   }
 
@@ -134,10 +143,10 @@ export class Game extends Scene {
     if (Phaser.Input.Keyboard.JustUp(this.space)) this.player.onActionEnd()
 
     let directions = []
-    if (this.w.isDown) directions.push(2)
-    if (this.a.isDown) directions.push(1)
-    if (this.s.isDown) directions.push(0)
-    if (this.d.isDown) directions.push(3)
+    if (this.w.isDown || this.up.isDown) directions.push(2)
+    if (this.a.isDown || this.left.isDown) directions.push(1)
+    if (this.s.isDown || this.down.isDown) directions.push(0)
+    if (this.d.isDown || this.right.isDown) directions.push(3)
     this.player.handleInput(directions)
 
     this.ball.update(delta)

@@ -269,14 +269,14 @@ export class Player extends GameObject3D {
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
 
       const chargeRatio = this.chargeTimer / MAX_CHARGE
-      const { w, a, s, d } = this.scene
+      const { w, a, s, d, left, right, up, down } = this.scene
       let yBias = 0.004 * chargeRatio
       let xBias = 0.01 * chargeRatio
 
-      const checkKey = getCheckKey(this.scene)
+      const check = getCheckKey(this.scene)
 
-      const inputYBias = checkKey(w) ? -yBias : checkKey(s) ? yBias : 0
-      const inputXBias = checkKey(d) ? xBias : checkKey(a) ? -xBias : 0
+      const inYBias = check([w, up]) ? -yBias : check([s, down]) ? yBias : 0
+      const inXBias = check([d, right]) ? xBias : check([a, left]) ? -xBias : 0
 
       let x = Phaser.Math.RND.realInRange(0.002, 0.005)
       if (this.sideIndex === 1) x *= -1
@@ -290,8 +290,8 @@ export class Player extends GameObject3D {
 
         z *= 0.25 + this.scene.ball.pos.y / 0.3
       } else {
-        x += inputXBias
-        y += inputYBias
+        x += inXBias
+        y += inYBias
         z *= chargeRatio
       }
 
@@ -381,5 +381,5 @@ export class Player extends GameObject3D {
   })
 }
 
-const getCheckKey = (scene: Game) => (key: Phaser.Input.Keyboard.Key) =>
-  key.isDown || Math.abs(key.timeUp - scene.time.now) < 200
+const getCheckKey = (scene: Game) => (keys: Phaser.Input.Keyboard.Key[]) =>
+  keys.some((k) => k.isDown || Math.abs(k.timeUp - scene.time.now) < 200)
