@@ -98,6 +98,7 @@ export class Ball extends GameObject3D {
   togglePickup = (value: boolean) => {
     this.gravityEnabled = !value
     this.bounceCount = 0
+    this.sprite.setVisible(this.gravityEnabled)
     this.shadow.setVisible(this.gravityEnabled)
   }
 
