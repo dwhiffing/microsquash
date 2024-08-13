@@ -382,4 +382,4 @@ export class Player extends GameObject3D {
 }
 
 const getCheckKey = (scene: Game) => (key: Phaser.Input.Keyboard.Key) =>
-  key.isDown || Math.abs(key.timeUp - scene.time.now) < 500
+  key.isDown || Math.abs(key.timeUp - scene.time.now) < 200
