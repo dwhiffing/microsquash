@@ -84,7 +84,11 @@ export class Player extends GameObject3D {
 
     // if we have the ball, keep it fixed to our position
     if (this.hasBall && !this.isServing) {
-      this.scene.ball.pos = { ...this.pos, y: this.pos.y + 0.1 }
+      this.scene.ball.pos = {
+        ...this.pos,
+        x: this.pos.x + 0.02,
+        y: this.pos.y + 0.1,
+      }
       this.scene.ball.vel = { ...this.vel, y: this.vel.y }
     }
 
@@ -234,7 +238,6 @@ export class Player extends GameObject3D {
     this.sprite.anims.play(`player-${this.palette}_idle`)
     this.vel = { x: 0, y: 0, z: 0 }
     this.scene.ball.vel = { x: 0, y: 0.009, z: 0 }
-    this.scene.ball.pos.x += 0.02
   }
 
   startSwing() {
