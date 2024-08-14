@@ -68,14 +68,12 @@ export class Menu extends Scene {
     this.events.on('gameOver', this.onGameOver)
 
     this.input.keyboard?.on('keydown-W', this.up)
-    this.input.keyboard?.on('keydown-A', this.left)
     this.input.keyboard?.on('keydown-S', this.down)
-    this.input.keyboard?.on('keydown-D', this.right)
     this.input.keyboard?.on('keydown-UP', this.up)
     this.input.keyboard?.on('keydown-DOWN', this.down)
-    this.input.keyboard?.on('keydown-LEFT', this.left)
-    this.input.keyboard?.on('keydown-RIGHT', this.right)
     this.input.keyboard?.on('keydown-SPACE', this.confirm)
+
+    // this.startGame()
   }
 
   onGameOver = (args: { winnerIndex: number }) => {
@@ -181,14 +179,6 @@ export class Menu extends Scene {
     if (!this.isActive) return
     this.optionIndex++
     this.setOption()
-  }
-  left = () => {
-    if (!this.isActive) return
-    console.log('left')
-  }
-  right = () => {
-    if (!this.isActive) return
-    console.log('right')
   }
 }
 

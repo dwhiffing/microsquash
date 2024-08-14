@@ -6,6 +6,7 @@ import {
 } from './constants'
 import { GameObject3D } from './GameObject3D'
 import { Game } from './scenes/Game'
+import { lerp } from './utils'
 
 const MIN_CHARGE = 70
 const MAX_CHARGE = 150
@@ -99,9 +100,7 @@ export class Player extends GameObject3D {
         this.scene.sleep(150).then(() => {
           this.startSwing()
           this.onSwing()
-          this.scene.sleep(250).then(() => {
-            this.onMoveTo({ x: 0.5, z: 0.5 })
-          })
+          this.scene.sleep(250).then(this.onMoveToCenter)
         })
       }
       if (this.isOurTurn) {
@@ -124,10 +123,24 @@ export class Player extends GameObject3D {
           this.canSwing() &&
           this.doesSwingHit()
         ) {
-          this.onMoveTo({ x: 0.5, z: 0.5 })
+          this.onMoveToCenter()
           this.startSwing()
-          this.chargeTimer = Phaser.Math.RND.between(MIN_CHARGE, MAX_CHARGE)
-          this.onSwing()
+          const opponent =
+            this.scene.player === this ? this.scene.cpu : this.scene.player
+          let zBias = 1 - opponent.pos.z
+
+          const zFactor = this.scene.cpuSkillLevel * 0.15
+          const xFactor = this.scene.cpuSkillLevel * 0.005
+          const yFactor = this.scene.cpuSkillLevel * 0.0025
+          zBias += Phaser.Math.RND.realInRange(-zFactor, zFactor)
+
+          this.chargeTimer = lerp(MIN_CHARGE, MAX_CHARGE, zBias)
+
+          let xBias = (opponent.pos.x - this.pos.x) * 0.01
+
+          xBias += Phaser.Math.RND.realInRange(-xFactor, xFactor)
+          const yBias = Phaser.Math.RND.realInRange(-yFactor, yFactor)
+          this.onSwing(xBias, yBias)
         }
       }
     }
@@ -159,9 +172,32 @@ export class Player extends GameObject3D {
     super.update(delta)
   }
 
+  getSwingDirection = () => {
+    const { w, a, s, d, left, right, up, down } = this.scene
+    const chargeRatio = this.chargeTimer / MAX_CHARGE
+    let _yBias = 0.004 * chargeRatio
+    let _xBias = 0.015 * chargeRatio
+    let x = 0.002
+    if (this.sideIndex === 1) x *= -1
+
+    const ch = getCheckKey(this.scene)
+    const yBias = ch([w, up]) ? -_yBias : ch([s, down]) ? _yBias : 0
+    const xBias = ch([d, right]) ? _xBias : ch([a, left]) ? -_xBias : x
+    return { xBias, yBias }
+  }
+
   handleInput(directions: number[]) {
     if (this.targetPosition || this.isGettingBall) return
     this.onMove(directions)
+  }
+
+  onMoveToCenter = () => {
+    // based on difficulty, should move somewhere further from center
+    const angle = Math.random() * 2 * Math.PI
+    let dist = 0.1 * (3 - this.scene.cpuSkillLevel)
+    let x = 0.5 + dist * Math.cos(angle)
+    let z = 0.5 + dist * Math.sin(angle)
+    this.onMoveTo({ x, z })
   }
 
   onMove(directions: number[]) {
@@ -227,7 +263,8 @@ export class Player extends GameObject3D {
 
   onActionEnd = () => {
     if (this.isCharging && this.canSwing()) {
-      this.onSwing()
+      const { xBias, yBias } = this.getSwingDirection()
+      this.onSwing(xBias, yBias)
     }
   }
 
@@ -247,7 +284,7 @@ export class Player extends GameObject3D {
     this.isCharging = true
   }
 
-  onSwing() {
+  onSwing(xBias = 0, yBias = 0) {
     this.isCharging = false
     const dist = this.getBallDistance()
     this.sprite.setFlipX(dist.x > 0)
@@ -268,18 +305,8 @@ export class Player extends GameObject3D {
       let currentSideIndex = this.scene.playerTurnIndex
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
 
-      const chargeRatio = this.chargeTimer / MAX_CHARGE
-      const { w, a, s, d, left, right, up, down } = this.scene
-      let yBias = 0.004 * chargeRatio
-      let xBias = 0.01 * chargeRatio
-
-      const check = getCheckKey(this.scene)
-
-      const inYBias = check([w, up]) ? -yBias : check([s, down]) ? yBias : 0
-      const inXBias = check([d, right]) ? xBias : check([a, left]) ? -xBias : 0
-
-      let x = Phaser.Math.RND.realInRange(0.002, 0.005)
-      if (this.sideIndex === 1) x *= -1
+      let x = 0
+      // if (this.sideIndex === 1) x *= -1
       let y = 0.012
       let z = 0.015
 
@@ -287,12 +314,11 @@ export class Player extends GameObject3D {
         let serveBias = 0.006
         if (this.sideIndex === 1) serveBias *= -1
         x = serveBias
-
         z *= 0.25 + this.scene.ball.pos.y / 0.3
       } else {
-        x += inXBias
-        y += inYBias
-        z *= chargeRatio
+        x += xBias
+        y += yBias
+        z *= this.chargeTimer / MAX_CHARGE
       }
 
       if (this.autoPlay) {

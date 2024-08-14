@@ -14,6 +14,7 @@ export class Game extends Scene {
   player: Player
   cpu: Player
   score: number
+  cpuSkillLevel: number
   playerTurnIndex: 1 | 0
   w: Phaser.Input.Keyboard.Key
   a: Phaser.Input.Keyboard.Key
@@ -43,6 +44,7 @@ export class Game extends Scene {
     this.data.set('homeScore', 0)
     this.data.set('awayScore', 0)
     this.playerTurnIndex = 0
+    this.cpuSkillLevel = 2
 
     this.events.on('startGame', this.onStartGame)
 
@@ -79,7 +81,7 @@ export class Game extends Scene {
   }
 
   onStartGame = (args: { skillLevel: number }) => {
-    console.log(args)
+    this.cpuSkillLevel = args.skillLevel
     this.onBallOut()
     this.data.set('homeScore', 0)
     this.data.set('awayScore', 0)
