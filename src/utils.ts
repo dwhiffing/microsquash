@@ -69,19 +69,13 @@ export function predictBounce(
   let _count = 0
   let _count2 = 0
 
-  let hasBounced = false
   while (true) {
-    doUpdate(_pos, _vel, TIMESCALE, bounce, friction, gravity, () => {
-      hasBounced = true
+    doUpdate(_pos, _vel, TIMESCALE, bounce, friction, gravity, (axis) => {
+      if (axis === 'y') _count++
     })
-    if (++_count2 > 1000) {
-      break
-    }
+    if (++_count2 > 1000) break
 
-    if (hasBounced) {
-      hasBounced = false
-      if (++_count >= count) break
-    }
+    if (_count >= count) break
   }
 
   return { x: _pos.x, z: _pos.z }
