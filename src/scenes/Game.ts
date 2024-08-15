@@ -86,6 +86,7 @@ export class Game extends Scene {
     this.data.set('homeScore', 0)
     this.data.set('awayScore', 0)
     this.updateScore()
+    this.cpu.togglePickup(false, false)
     this.playerTurnIndex = 0
 
     this.player.autoPlay = false
