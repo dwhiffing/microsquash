@@ -171,12 +171,12 @@ export class Menu extends Scene {
   }
 
   up = () => {
-    if (!this.isActive) return
+    if (!this.isActive || this.isHelp) return
     this.optionIndex--
     this.setOption()
   }
   down = () => {
-    if (!this.isActive) return
+    if (!this.isActive || this.isHelp) return
     this.optionIndex++
     this.setOption()
   }
