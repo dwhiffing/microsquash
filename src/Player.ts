@@ -96,7 +96,7 @@ export class Player extends GameObject3D {
 
     // if we are a cpu player, play automatically
     if (this.autoPlay) {
-      if (this.hasBall && !this.isGettingBall) {
+      if (this.hasBall && !this.isGettingBall && this.canSwing()) {
         this.onAction()
         const serveOffset = (2 - this.scene.cpuSkillLevel) * 50
         const serveDelay =
