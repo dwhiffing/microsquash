@@ -37,7 +37,7 @@ export class Game extends Scene {
     this.ball = new Ball(this)
     this.marker = new Marker(this)
     this.player = new Player(this, 'base', 0, true)
-    this.player.togglePickup(true)
+    this.player.togglePickup(true, false)
     this.player.pos = { x: 0.08, y: 0, z: 0.4 }
     this.cpu = new Player(this, 'red', 1, true)
     this.cpu.pos = { x: 0.65, y: 0, z: 0.35 }
@@ -124,6 +124,9 @@ export class Game extends Scene {
     if (this.ball.hasFaulted) isHomePoint = !isHomePoint
     const homeChange = isHomePoint ? 1 : 0
     const awayChange = isHomePoint ? 0 : 1
+
+    if ((homeChange || awayChange) && !this.player.autoPlay)
+      this.sound.play(homeChange ? 'point-win' : 'point-loss')
     this.updateScore(homeChange, awayChange)
     this.playerTurnIndex = isHomePoint ? 0 : 1
     this.player.hasReset = false

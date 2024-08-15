@@ -80,7 +80,7 @@ export class Player extends GameObject3D {
 
     // if we have the ball, keep it fixed to our position
     if (this.isServing && !this.hasBall && this.scene.ball.pos.y < 0.05) {
-      this.togglePickup(true)
+      this.togglePickup(true, false)
       this.isServing = false
     }
 
@@ -251,8 +251,11 @@ export class Player extends GameObject3D {
     }
   }
 
-  togglePickup(value: boolean) {
+  togglePickup(value: boolean, playSound = true) {
     this.hasBall = value
+    if (value && playSound) {
+      this.scene.sound.play('select')
+    }
     this.scene.ball.togglePickup(value)
     // this.sprite.setTintFill(value ? 0xff0000 : 0xaa0000)
     if (this.hasBall) {
@@ -279,6 +282,10 @@ export class Player extends GameObject3D {
 
   startServe() {
     if (this.isServing) return
+
+    this.scene.sound.play('serve', {
+      volume: this.scene.player.autoPlay ? 0.1 : 0.3,
+    })
     this.isServing = true
     this.togglePickup(false)
     this.sprite.anims.play(`player-${this.palette}_idle`)
@@ -311,6 +318,12 @@ export class Player extends GameObject3D {
     })
 
     if (this.doesSwingHit()) {
+      this.scene.sound.play('swing-hit', {
+        rate: this.scene.playerTurnIndex
+          ? Phaser.Math.RND.realInRange(0.9, 0.95)
+          : Phaser.Math.RND.realInRange(1, 1.05),
+        volume: this.scene.player.autoPlay ? 0.1 : 0.3,
+      })
       let currentSideIndex = this.scene.playerTurnIndex
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
 
@@ -347,6 +360,8 @@ export class Player extends GameObject3D {
         this.scene.ball.hasFaulted = true
         this.scene.onBallOut()
       }
+    } else {
+      this.scene.sound.play('swing-miss', { rate: 1.4 })
     }
   }
 

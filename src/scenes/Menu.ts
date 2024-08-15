@@ -69,6 +69,7 @@ export class Menu extends Scene {
 
     this.input.keyboard?.on('keydown-W', this.up)
     this.input.keyboard?.on('keydown-S', this.down)
+    this.input.keyboard?.on('keydown-M', this.toggleMute)
     this.input.keyboard?.on('keydown-UP', this.up)
     this.input.keyboard?.on('keydown-DOWN', this.down)
     this.input.keyboard?.on('keydown-SPACE', this.confirm)
@@ -106,10 +107,13 @@ export class Menu extends Scene {
 
   confirm = () => {
     if (!this.isActive) return
+
     if (this.isDifficultySelect) {
+      this.sound.play('confirm')
       this.startGame()
     } else {
       if (this.optionIndex === 0) {
+        this.sound.play('confirm2')
         this.showDifficulties()
       } else {
         this.toggleHelp()
@@ -119,9 +123,11 @@ export class Menu extends Scene {
 
   toggleHelp = () => {
     if (!this.isHelp) {
+      this.sound.play('confirm2')
       this.helpIndex = 0
       this.isHelp = true
     } else {
+      this.sound.play('select')
       this.helpIndex++
     }
     this.helpText.setText(TEXTS[this.helpIndex])
@@ -180,12 +186,20 @@ export class Menu extends Scene {
   up = () => {
     if (!this.isActive || this.isHelp) return
     this.optionIndex--
+    this.sound.play('select')
+
     this.setOption()
   }
   down = () => {
     if (!this.isActive || this.isHelp) return
     this.optionIndex++
+    this.sound.play('select')
     this.setOption()
+  }
+
+  toggleMute = () => {
+    this.sound.mute = !this.sound.mute
+    this.sound.play('select')
   }
 }
 

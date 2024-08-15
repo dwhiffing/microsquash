@@ -120,6 +120,12 @@ export class Ball extends GameObject3D {
   onBounce(axis: string, isGround: boolean) {
     if (!this.gravityEnabled) return
 
+    this.scene.sound.play('bounce1', {
+      // @ts-ignore
+      volume: this.vel[axis] * 20,
+      rate: 0.5,
+    })
+
     if (axis === 'z') {
       this.bounceEmitterZ.emitParticleAt(this.sprite.x - 1, this.sprite.y - 2)
     }

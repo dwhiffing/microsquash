@@ -13,6 +13,15 @@ export class Boot extends Scene {
   }
 
   preload() {
+    this.load.audio('select', 'assets/select.mp3')
+    this.load.audio('confirm', 'assets/confirm.mp3')
+    this.load.audio('confirm2', 'assets/confirm2.mp3')
+    this.load.audio('bounce1', 'assets/bounce1.mp3')
+    this.load.audio('serve', 'assets/serve.mp3')
+    this.load.audio('swing-hit', 'assets/swing-hit.mp3')
+    this.load.audio('swing-miss', 'assets/swing-miss.mp3')
+    this.load.audio('point-loss', 'assets/point-loss.mp3')
+    this.load.audio('point-win', 'assets/point-win.mp3')
     this.load.image('ball', 'assets/ball.png')
     this.load.image('background', 'assets/bg.png')
     this.load.spritesheet('player-base', 'assets/player.png', {
