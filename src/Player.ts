@@ -12,6 +12,7 @@ const MIN_CHARGE = 70
 const MAX_CHARGE = 150
 export class Player extends GameObject3D {
   hasBall: boolean
+  isStalling: boolean
   autoPlay: boolean
   isGettingBall: boolean
   isResetting: boolean
@@ -97,7 +98,10 @@ export class Player extends GameObject3D {
     if (this.autoPlay) {
       if (this.hasBall && !this.isGettingBall) {
         this.onAction()
-        this.scene.sleep(150).then(() => {
+        const serveOffset = (2 - this.scene.cpuSkillLevel) * 50
+        const serveDelay =
+          150 + Phaser.Math.RND.between(-serveOffset, serveOffset)
+        this.scene.sleep(serveDelay).then(() => {
           this.startSwing()
           this.onSwing()
           this.scene.sleep(250).then(this.onMoveToCenter)
@@ -112,6 +116,11 @@ export class Player extends GameObject3D {
           })
         }
         if (!this.targetPosition && this.scene.ball.inPlay) {
+          this.isStalling = true
+          const stallTime = (2 - this.scene.cpuSkillLevel) * 350
+          this.scene.time.delayedCall(stallTime, () => {
+            this.isStalling = false
+          })
           const diff =
             Math.abs(this.pos.z - this.scene.marker.pos.z) +
             Math.abs(this.pos.x - this.scene.marker.pos.x)
@@ -146,7 +155,7 @@ export class Player extends GameObject3D {
     }
 
     // if we have a target position, move us toward that position
-    if (this.targetPosition) {
+    if (this.targetPosition && !this.isStalling) {
       let directions: number[] = []
       const xdiff = this.pos.x - this.targetPosition.x
       const zdiff = this.pos.z - this.targetPosition.z
