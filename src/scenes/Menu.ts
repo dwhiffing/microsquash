@@ -79,6 +79,8 @@ export class Menu extends Scene {
   onGameOver = (args: { winnerIndex: number }) => {
     this.isActive = true
 
+    this.optionIndex = 0
+    this.setOption()
     this.winnerIndex = args.winnerIndex
     if (typeof this.winnerIndex === 'number') {
       this.winnerText.setText(
@@ -138,6 +140,11 @@ export class Menu extends Scene {
   showDifficulties = () => {
     this.isDifficultySelect = true
     this.optionText.setText(`EASY\nFAIR\nHARD`)
+    this.tweens.add({
+      targets: [this.winnerText],
+      alpha: 0,
+      duration: TWEEN_DURATION,
+    })
     this.setOption()
   }
 
@@ -183,16 +190,62 @@ export class Menu extends Scene {
 }
 
 const TEXTS = [
-  `BEAT THE CPU
-AT SQUASH`,
-  `MOVE WITH ARROWS
-OR WASD`,
-  `SPACE TO SERVE
-OR SWING`,
-  //   `M
+  `RULES
+  
+HIT THE BALL
+AFTER OPPONENT`,
+  `RULES
 
-  // TOGGLE MUTE
-  // `,
+DO NOT LET
+IT BOUNCE TWICE`,
+  `RULES
+
+HIT WALL ABOVE
+BOTTOM LINE`,
+  `RULES
+
+ABOVE SECOND
+LINE ON SERVE`,
+  `RULES
+
+FIRST TO 10
+POINTS WINS`,
+  `CONTROLS
+  
+ARROWS OR WASD
+TO MOVE`,
+  `CONTROLS
+
+SPACEBAR TO
+SERVE OR SWING`,
+  `CONTROLS
+
+M TO
+TOGGLE MUTE`,
+  `SERVING
+
+TAP SPACE TO
+START SERVE`,
+  `SERVING
+
+SWING WHEN BALL
+IS AT PEAK`,
+  `SERVING
+
+SERVE MUST LAND
+IN OPPONENT BOX`,
+  `SWINGING
+
+TAP FOR
+LIGHT SWING`,
+  `SWINGING
+
+HOLD FOR
+CHARGED SWING`,
+  `SWINGING
+
+MOVEMENT KEYS
+CHANGE ANGLE`,
   `CREATED BY
 
 DANIEL
