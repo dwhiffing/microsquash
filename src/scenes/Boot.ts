@@ -18,6 +18,8 @@ export class Boot extends Scene {
     this.load.audio('confirm2', 'assets/confirm2.mp3')
     this.load.audio('bounce1', 'assets/bounce1.mp3')
     this.load.audio('serve', 'assets/serve.mp3')
+    this.load.audio('lose', 'assets/lose.mp3')
+    this.load.audio('win', 'assets/win.mp3')
     this.load.audio('swing-hit', 'assets/swing-hit.mp3')
     this.load.audio('swing-miss', 'assets/swing-miss.mp3')
     this.load.audio('point-loss', 'assets/point-loss.mp3')

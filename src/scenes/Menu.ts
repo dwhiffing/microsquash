@@ -85,6 +85,10 @@ export class Menu extends Scene {
   onGameOver = (args: { winnerIndex: number }) => {
     this.isActive = true
 
+    this.time.delayedCall(400, () => {
+      this.sound.play(args.winnerIndex === 0 ? 'win' : 'lose', { volume: 0.7 })
+    })
+
     this.optionIndex = 0
     this.setOption()
     this.winnerIndex = args.winnerIndex
