@@ -1,4 +1,5 @@
 import { Scene, GameObjects } from 'phaser'
+import { setTimescale } from '../constants'
 
 const BG_ALPHA = 0.2
 const TWEEN_DURATION = 600
@@ -27,6 +28,9 @@ export class Menu extends Scene {
     this.isDifficultySelect = false
     this.optionIndex = 1
     this.winnerIndex = -1
+    this.sound.pauseOnBlur = false
+    this.game.events.on('focus', () => this.togglePause(1))
+    this.game.events.on('blur', () => this.togglePause(0))
     this.helpIndex = 0
     this.bg = this.add
       .rectangle(0, 0, 64, 64, 0xffffff)
@@ -70,6 +74,7 @@ export class Menu extends Scene {
     this.input.keyboard?.on('keydown-W', this.up)
     this.input.keyboard?.on('keydown-S', this.down)
     this.input.keyboard?.on('keydown-M', this.toggleMute)
+    this.input.keyboard?.on('keydown-P', this.togglePause)
     this.input.keyboard?.on('keydown-UP', this.up)
     this.input.keyboard?.on('keydown-DOWN', this.down)
     this.input.keyboard?.on('keydown-SPACE', this.confirm)
@@ -200,6 +205,16 @@ export class Menu extends Scene {
   toggleMute = () => {
     this.sound.mute = !this.sound.mute
     this.sound.play('select')
+  }
+
+  togglePause = (_value?: number) => {
+    let value =
+      typeof _value === 'number' ? _value : this.anims.globalTimeScale ? 0 : 1
+    setTimescale(value)
+    this.anims.globalTimeScale = value
+    this.tweens.timeScale = value
+    this.time.timeScale = value
+    this.sound.mute = !value
   }
 }
 

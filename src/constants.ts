@@ -5,8 +5,11 @@ export const BOUNCE = 0.4
 export const GRAVITY = 0.0002
 export const MIN_VEL = 0.005
 export const AVG_DELTA = 8.3
-export const TIMESCALE = 1
+export let TIMESCALE = 1
 export const WIN_ROUNDS = 10
+export const setTimescale = (v = 1) => {
+  TIMESCALE = v
+}
 
 export const PLAYER_MAX_SPEED = 0.0045
 export const PLAYER_SPEED = 0.0003
