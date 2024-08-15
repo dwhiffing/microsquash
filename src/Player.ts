@@ -117,7 +117,7 @@ export class Player extends GameObject3D {
         }
         if (!this.targetPosition && this.scene.ball.inPlay) {
           this.isStalling = true
-          const stallTime = (2 - this.scene.cpuSkillLevel) * 350
+          const stallTime = (2 - this.scene.cpuSkillLevel) * 400
           this.scene.time.delayedCall(stallTime, () => {
             this.isStalling = false
           })
