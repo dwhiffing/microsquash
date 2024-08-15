@@ -77,7 +77,27 @@ export class Player extends GameObject3D {
     if (this.isCharging && this.chargeTimer < MAX_CHARGE) {
       this.chargeTimer += delta / 7
     }
-
+    if (this.isCharging && this.chargeTimer > MAX_CHARGE) {
+      this.chargeTimer = MAX_CHARGE
+      this.scene.sound.play('charge')
+      this.sprite.setTint(Phaser.Display.Color.GetColor(200, 0, 0))
+    }
+    if (this.isCharging) {
+      const chargeRatio = Phaser.Math.Clamp(
+        (this.chargeTimer - MIN_CHARGE) / (MAX_CHARGE - MIN_CHARGE),
+        0,
+        1,
+      )
+      const chargeTint = 240
+      const chargeTint2 = 120
+      this.sprite.setTint(
+        Phaser.Display.Color.GetColor(
+          chargeTint + (255 - chargeTint) * (1 - chargeRatio),
+          chargeTint2 + (255 - chargeTint2) * (1 - chargeRatio),
+          chargeTint2 + (255 - chargeTint2) * (1 - chargeRatio),
+        ),
+      )
+    }
     // if we have the ball, keep it fixed to our position
     if (this.isServing && !this.hasBall && this.scene.ball.pos.y < 0.05) {
       this.togglePickup(true, false)
@@ -302,6 +322,7 @@ export class Player extends GameObject3D {
 
   onSwing(xBias = 0, yBias = 0) {
     this.isCharging = false
+    this.sprite.clearTint()
     const dist = this.getBallDistance()
     this.sprite.setFlipX(dist.x > 0)
     const isOverhead = this.isServing || dist.y < -0.15
@@ -318,12 +339,16 @@ export class Player extends GameObject3D {
     })
 
     if (this.doesSwingHit()) {
-      this.scene.sound.play('swing-hit', {
-        rate: this.scene.playerTurnIndex
-          ? Phaser.Math.RND.realInRange(0.9, 0.95)
-          : Phaser.Math.RND.realInRange(1, 1.05),
-        volume: this.scene.player.autoPlay ? 0.1 : 0.3,
-      })
+      const chargeRatio = this.chargeTimer / MAX_CHARGE
+      this.scene.sound.play(
+        chargeRatio > 0.9 ? 'swing-hit-hard' : 'swing-hit',
+        {
+          rate: this.scene.playerTurnIndex
+            ? Phaser.Math.RND.realInRange(0.9, 0.95)
+            : Phaser.Math.RND.realInRange(1, 1.05),
+          volume: this.scene.player.autoPlay ? 0.1 : 0.3,
+        },
+      )
       let currentSideIndex = this.scene.playerTurnIndex
       this.scene.playerTurnIndex = this.sideIndex ? 0 : 1
 
@@ -340,7 +365,7 @@ export class Player extends GameObject3D {
       } else {
         x += xBias
         y += yBias
-        z *= this.chargeTimer / MAX_CHARGE
+        z *= chargeRatio
       }
 
       if (this.autoPlay) {
